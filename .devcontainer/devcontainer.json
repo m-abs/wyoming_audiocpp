@@ -6,6 +6,7 @@
 	"service": "app",
 	"workspaceFolder": "/workspaces",
 	"postCreateCommand": "./.devcontainer/postCreate.sh",
+	"forwardPorts": [8000],
 	"features": {
 		"ghcr.io/devcontainers/features/node:2": {},
 		"ghcr.io/michidk/devcontainers-features/bun:1": {},

@@ -1,4 +1,18 @@
 {
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.jj": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/build": true,
+        "**/.devcontainer/audio.cpp/models": true,
+        "**/*.egg-info": true
+    },
     "cSpell.words": [
         "GGUF",
         "omnivoice"

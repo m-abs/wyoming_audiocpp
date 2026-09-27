@@ -1,14 +1,14 @@
 [project]
-name = "wyoming-audiocpp"
+name = "wyoming-audiocpp-asr"
 version = "0.1.0"
-description = "Wyoming protocol Danish voice assistant (ASR + TTS)"
+description = "Wyoming protocol ASR service bridging to audio.cpp"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "CoRal / Alexandra Institute"},
 ]
-keywords = ["rhasspy", "wyoming", "asr", "tts", "danish"]
+keywords = ["wyoming", "asr", "audio.cpp", "voice"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -21,9 +21,8 @@ classifiers = [
 ]
 dependencies = [
     "wyoming>=1.10.2,<2",
-    # numpy 1.x for Python < 3.13 (no 1.x wheels on 3.13+), numpy 2.x for 3.13+
-    "numpy>=1.24.0,<2.0.0; python_version < '3.13'",
-    "numpy>=2.0.0; python_version >= '3.13'",
+    "flask>=3.0,<4",
+    "requests>=2.31,<3",
 ]
 
 [project.urls]
@@ -35,11 +34,11 @@ zip-safe = true
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["wyoming_roester"]
-exclude = ["tests", "wyoming_roester.tests"]
+include = ["wyoming_audiocpp_asr", "wyoming_audiocpp_asr.tests"]
+exclude = ["tests", "wyoming_audiocpp_asr.tests.*.tests"]
 
 [project.scripts]
-wyoming-roester = "wyoming_roester.__main__:main"
+wyoming-audiocpp-asr = "wyoming_audiocpp_asr.__main__:main"
 
 [build-system]
 requires = ["setuptools>=78,<81", "wheel"]
@@ -61,13 +60,5 @@ dev = [
     "isort",
     "pytest",
     "pytest-asyncio",
-]
-# Optional ASR extras. asr_handler implements its own lean TransformersTranscriber
-# on top of `transformers` + `torch`; it does NOT import faster-whisper, so that
-# package is intentionally not a dependency here (only torch/transformers are).
-# pysilero-vad powers the optional --vad-endpointing feature.
-transformers = [
-    "pysilero-vad>=3.4.0,<4",
-    "transformers[torch]>=4.46,<6",
-    "sentencepiece"
+    "requests",
 ]

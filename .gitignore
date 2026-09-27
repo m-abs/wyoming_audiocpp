@@ -5,3 +5,5 @@ __pycache__
 *.egg-info
 build
 .devcontainer/devcontainer-lock.json
+audio.cpp/
+__pycache__

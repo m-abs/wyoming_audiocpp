@@ -9,3 +9,8 @@ curl -fsSL https://omp.sh/install | sh
 
 mkdir -pv ~/.local/bin/
 ln -s ~/.bun/bin/omp ~/.local/bin/
+
+npm i -g @colbymchenry/codegraph
+~/.bun/bin/omp install npm:@vndv/pi-codegraph
+
+codegraph init 
