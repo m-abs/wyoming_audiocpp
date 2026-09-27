@@ -1,0 +1,7 @@
+.venv
+__pycache__
+.codegraph
+/data/
+*.egg-info
+build
+.devcontainer/devcontainer-lock.json

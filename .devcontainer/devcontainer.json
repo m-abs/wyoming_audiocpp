@@ -1,0 +1,29 @@
+{
+	"name": "Python 3",
+	"dockerComposeFile": [
+		"compose.yml"
+	],
+	"service": "app",
+	"workspaceFolder": "/workspaces",
+	"postCreateCommand": "./.devcontainer/postCreate.sh",
+	"features": {
+		"ghcr.io/devcontainers/features/node:2": {},
+		"ghcr.io/michidk/devcontainers-features/bun:1": {},
+		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {
+			"installDirectlyFromGitHubRelease": true,
+			"version": "latest"
+		},
+		"ghcr.io/joshuanianji/devcontainer-features/github-cli-persistence:1": {},
+		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
+			"plugins": "ssh-agent npm",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+			"username": "vscode"
+		},
+		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+			"packages": [
+				"vim"
+			]
+		}
+	}
+}

@@ -1,0 +1,37 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/python:3-3.14-bookworm
+    volumes:
+      - ..:/workspaces:cached
+      - omp-data:/home/vscode/.omp
+      - ${HOME}/.omp/agent:/home/vscode/.omp/agent
+    command: sleep infinity
+
+    environment:
+      - TZ=Europe/Copenhagen
+
+    depends_on:
+      - audio.cpp
+
+  audio.cpp:
+    image: ghcr.io/0xshug0/audio.cpp:full-cuda12
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./audio.cpp/models:/app/models
+      - ./audio.cpp/server.json:/app/server.json
+      - ./audio.cpp/cmd.sh:/app/cmd.sh:ro
+    entrypoint: /app/cmd.sh
+
+    environment:
+      - TZ=Europe/Copenhagen
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+
+volumes:
+  omp-data:
