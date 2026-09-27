@@ -7,3 +7,4 @@ build
 .devcontainer/devcontainer-lock.json
 audio.cpp/
 __pycache__
+audio.cpp
