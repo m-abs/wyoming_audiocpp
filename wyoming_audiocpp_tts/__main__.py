@@ -36,8 +36,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--port",
         type=int,
-        default=11200,
-        help="Port to listen on (default: 11200)",
+        default=11201,
+        help="Port to listen on (default: 11201)",
     )
     parser.add_argument(
         "--log-level",

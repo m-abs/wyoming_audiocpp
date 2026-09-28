@@ -30,6 +30,10 @@ logger = logging.getLogger("wyoming_audiocpp_asr")
 def create_app(config: Config) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_asr")
+    @app.after_request
+    def cors(resp):
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
 
     @app.route("/api/info", methods=["GET"])
     def api_info() -> Response:

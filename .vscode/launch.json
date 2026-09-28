@@ -1,0 +1,78 @@
+{
+    "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "All",
+            "configurations": [
+                "Wyoming ASR",
+                "Wyoming TTS",
+                "Playground (Next.js)"
+            ]
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Wyoming ASR",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "wyoming_audiocpp_asr",
+            "args": [
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "11301",
+                "--audiocpp-uri",
+                "http://audio.cpp:8080"
+            ],
+            "cwd": "/workspaces",
+            "console": "integratedTerminal",
+            "python": "/workspaces/.venv/bin/python",
+            "justMyCode": true
+        },
+        {
+            "name": "Wyoming TTS",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "wyoming_audiocpp_tts",
+            "args": [
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "11201",
+                "--tts-voice0-model",
+                "omnivoice",
+                "--tts-voice0-name",
+                "female",
+                "--tts-voice0-language",
+                "da",
+                "--tts-voice0-speed",
+                "1.0",
+                "--audiocpp-uri",
+                "http://audio.cpp:8080"
+            ]
+        ],
+        "cwd": "/workspaces",
+        "console": "integratedTerminal",
+        "python": "/workspaces/.venv/bin/python",
+        "justMyCode": true
+    },
+    {
+        "name": "Playground (Next.js)",
+        "type": "node",
+        "request": "launch",
+        "program": "/workspaces/audiocpp-playground/node_modules/.bin/next",
+        "args": [
+            "dev",
+            "--port",
+            "11000"
+        ],
+        "cwd": "/workspaces/audiocpp-playground",
+        "console": "integratedTerminal",
+        "localRoot": "/workspaces/audiocpp-playground/node_modules/.cache/next",
+        "skipFiles": [
+            "**/node_modules/**",
+            "<node_internals>/**"
+        ]
+    }
+]
+}

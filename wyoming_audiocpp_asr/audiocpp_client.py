@@ -29,7 +29,7 @@ def transcribe(
     inline as the ``file`` part of a multipart/form-data request, matching the
     OpenAI Whisper convention audio.cpp expects.
     """
-    files = {"file": ("audio.wav", _audio_type(wav_bytes), "audio/wav")}
+    files = {"file": ("audio.wav", wav_bytes, "audio/wav")}
     data = {"model": model}
     if language is not None:
         data["language"] = language
@@ -42,12 +42,3 @@ def transcribe(
     )
     response.raise_for_status()
     return response.json()
-
-
-def _audio_type(wav_bytes: bytes) -> str:
-    """MIME type for an uploaded audio part.
-
-    audio.cpp only accepts WAV, so the part is declared as ``audio/wav``. We rely
-    on the caller having produced a WAV; if not, audio.cpp rejects it at decode.
-    """
-    return "audio/wav"

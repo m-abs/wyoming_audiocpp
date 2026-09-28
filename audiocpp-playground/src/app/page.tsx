@@ -11,16 +11,15 @@ export default function Home() {
   const [models, setModels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [overrides, setOverrides] = useState<Overrides>({
-    ttsBase: "http://localhost:11200",
-    asrBase: "http://localhost:11300",
+    ttsBase: "http://localhost:11201",
+    asrBase: "http://localhost:11301",
   });
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const list = await loadModels();
-        if (active) setModels(list);
+        const list = await loadModels(overrides.asrBase);
       } catch {
         // models unavailable (bridges down) — selectors degrade gracefully
       } finally {
@@ -48,8 +47,8 @@ export default function Home() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">audio.cpp TTS/ASR Playground</h1>
             <p className="text-sm text-zinc-500">
-              Wyoming bridges · TTS <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11200</code> · ASR{" "}
-              <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11300</code>
+              Wyoming bridges · TTS <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11201</code> · ASR{" "}
+              <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11301</code>
             </p>
           </div>
           <StatusRow models={models} loading={loading} ttsBase={overrides.ttsBase} asrBase={overrides.asrBase} />

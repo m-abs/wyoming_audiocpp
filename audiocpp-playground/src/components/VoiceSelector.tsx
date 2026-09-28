@@ -4,11 +4,13 @@ import { useMemo, useState, useCallback } from "react";
 import type { VoiceConfig } from "../lib/api";
 import type { Overrides } from "../lib/config";
 
-export async function loadModels(): Promise<string[]> {
-  const info = await (await fetch("/api/info")).json();
+export async function loadModels(ttsBase: string): Promise<string[]> {
+  const info = await (await fetch(`${ttsBase}/api/info`)).json();
   const asr = (info?.asr ?? []).map((m: { name?: string }) => m.name);
   // Ensure the TTS default (omnivoice) is offered even if ASR filters it out.
-  if (!asr.includes("omnivoice")) asr.push("omnivoice");
+  if (!asr.includes("omnivoice")) {
+    asr.push("omnivoice");
+  }
   return asr;
 }
 
@@ -37,7 +39,8 @@ export function VoiceSelector({
     [model, voice, language, speed, instruct],
   );
 
-  const voiceConfig: VoiceConfig | undefined =
+const voiceConfig = useMemo<VoiceConfig | undefined>(
+  () =>
     modelSet || voiceSet || languageSet || speedSet || instructSet
       ? {
           ...(modelSet ? { model } : {}),
@@ -46,7 +49,20 @@ export function VoiceSelector({
           ...(speedSet ? { speed: Number(speed) } : {}),
           ...(instructSet ? { instruct } : {}),
         }
-      : undefined;
+      : undefined,
+  [
+    model,
+    voice,
+    language,
+    speed,
+    instruct,
+    modelSet,
+    voiceSet,
+    languageSet,
+    speedSet,
+    instructSet,
+  ]
+)
 
   const play = useCallback(async () => {
     if (!text.trim()) {
@@ -182,7 +198,7 @@ function OverridesPanel({
       </label>
       <button
         className="self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        onClick={() => onChange({ ttsBase: "http://localhost:11200", asrBase: "http://localhost:11300" })}
+        onClick={() => onChange({ ttsBase: "http://localhost:11201", asrBase: "http://localhost:11301" })}
       >
         Reset
       </button>

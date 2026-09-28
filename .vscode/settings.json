@@ -11,7 +11,8 @@
         "**/.pytest_cache": true,
         "**/build": true,
         "**/.devcontainer/audio.cpp/models": true,
-        "**/*.egg-info": true
+        "**/*.egg-info": true,
+        "audio.cpp": true
     },
     "cSpell.words": [
         "GGUF",

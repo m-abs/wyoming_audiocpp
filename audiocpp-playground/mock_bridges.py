@@ -6,12 +6,19 @@ Two Flask apps stand in for the real Wyoming bridges, running on fixed ports:
 * ``asr`` -- ``POST /api/speech-to-text`` returns a canned transcription;
   ``GET /api/info`` returns a canned model list.
 
-They share a Flask/Werkzeug install so the playground code paths are exercised.
+Both attach an ``Access-Control-Allow-Origin: *`` hook so the cross-origin
+Next.js playground can call them. They share a Flask/Werkzeug install so the
+playground code paths are exercised.
 """
 
 from __future__ import annotations
 
 from flask import Flask, Response, jsonify, request
+
+
+def cors(resp):
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
 
 
 def _fake_wav(n: int = 44) -> bytes:
@@ -21,6 +28,11 @@ def _fake_wav(n: int = 44) -> bytes:
 # --- TTS bridge ----------------------------------------------------------------
 
 tts = Flask("mock_tts")
+
+
+@tts.after_request
+def _tts_cors(resp):
+    return cors(resp)
 
 
 @tts.route("/api/tts", methods=["POST"])
@@ -40,6 +52,11 @@ def info():
 # --- ASR bridge ----------------------------------------------------------------
 
 asr = Flask("mock_asr")
+
+
+@asr.after_request
+def _asr_cors(resp):
+    return cors(resp)
 
 
 @asr.route("/api/speech-to-text", methods=["POST"])
@@ -66,3 +83,24 @@ def models():
 @asr.route("/")
 def info():
     return jsonify({"name": "mock_asr"})
+
+
+def _serve(app, host, port):
+    from werkzeug.serving import make_server
+    srv = make_server(host, port, app, threaded=True)
+    srv.serve_forever()
+
+
+def main():
+    import argparse
+    p = argparse.ArgumentParser(description="Run playground mock bridges")
+    p.add_argument("--tts-port", type=int, default=11201)
+    p.add_argument("--asr-port", type=int, default=11301)
+    a = p.parse_args()
+    import threading
+    t = threading.Thread(target=_serve, args=(asr, "127.0.0.1", a.asr_port), daemon=True)
+    t.start()
+    t = threading.Thread(target=_serve, args=(tts, "127.0.0.1", a.tts_port), daemon=True)
+    t.start()
+    print("mock_tts listening on http://127.0.0.1:%d" % a.tts_port, flush=True)
+    print("mock_asr listening on http://127.0.0.1:%d" % a.asr_port, flush=True)

@@ -9,20 +9,22 @@ services:
 
     environment:
       - TZ=Europe/Copenhagen
-      #- OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
 
     depends_on:
       - audio.cpp
       
-    #extra_hosts:
-    #  - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-    network_mode: host
+    networks:
+      - host
+      - audiocpp
 
   audio.cpp:
     image: ghcr.io/0xshug0/audio.cpp:full-cuda12
     ports:
-      - "8080:8080"
+      - "0.0.0.0:8080:8080"
     volumes:
       - ./audio.cpp/models:/app/models
       - ./audio.cpp/server.json:/app/server.json
@@ -32,7 +34,8 @@ services:
     environment:
       - TZ=Europe/Copenhagen
 
-    network_mode: host
+    networks:
+      - audiocpp
 
     deploy:
       resources:
@@ -43,3 +46,8 @@ services:
 
 volumes:
   omp-data:
+
+networks:
+  host:
+    driver: bridge
+  audiocpp:

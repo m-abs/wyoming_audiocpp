@@ -151,7 +151,7 @@ function OverridesPanel({
       </label>
       <button
         className="self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        onClick={() => onChange({ ttsBase: "http://localhost:11200", asrBase: "http://localhost:11300" })}
+        onClick={() => onChange({ ttsBase: "http://localhost:11201", asrBase: "http://localhost:11301" })}
       >
         Reset
       </button>

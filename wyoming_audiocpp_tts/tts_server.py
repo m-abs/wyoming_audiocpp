@@ -32,6 +32,11 @@ def create_app(config: Config) -> Flask:
     app.config["TTS_VOICE"] = config.tts_voice
     app.config["ASR_MODEL"] = config.asr_model
 
+    @app.after_request
+    def cors(resp):
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+
     @app.route("/api/tts", methods=["POST"])
     def api_tts() -> Response:
         body = request.get_json(silent=True) or {}
