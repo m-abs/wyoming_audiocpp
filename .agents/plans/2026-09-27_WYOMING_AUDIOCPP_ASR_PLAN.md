@@ -53,7 +53,7 @@ Implement `wyoming_audiocpp_asr`: a Wyoming-compatible ASR service that bridges 
   - `--model` — ASR model id (default from config)
   - `--language` — language hint (default from config)
   - `--host` (default: `0.0.0.0`)
-  - `--port` (default: `5000`)
+  - `--port` (default: `11300`)
   - `--log-level` (default: `INFO`)
 - Behavior: parse CLI, build `Config` via `Config.from_args()`, start Flask app.
 

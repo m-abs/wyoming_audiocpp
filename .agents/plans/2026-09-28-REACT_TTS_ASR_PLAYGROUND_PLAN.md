@@ -7,7 +7,7 @@ User wants a simple web interface to test audio.cpp's TTS and ASR capabilities v
 - **TTS Server** (`wyoming_audiocpp_tts/tts_server.py`): `POST /api/tts` accepts `{text}` JSON, returns WAV audio (`audio/wav`). `GET /` returns service metadata. Upstream audio.cpp errors return 502.
 - **ASR Server** (`wyoming_audiocpp_asr/asr_server.py`): `POST /api/speech-to-text` accepts multipart/form-data WAV file (field name **`file`**, filename `audio.wav`, type `audio/wav`), optional `?language` and `?model` query params, returns `{text, language}` JSON. `GET /api/info` returns `{asr:[{name, attribution:{name,url}, installed, languages}]}`. Empty body returns 400; upstream errors return 502.
 
-Both Flask servers bind `0.0.0.0:5000` by default (overridable via `--host`/`--port` in each `__main__.py`). Because they share a port, the playground must launch them on distinct ports, e.g. TTS `--port 5001`, ASR `--port 5002`.
+Both Flask servers bind `0.0.0.0` by default (overridable via `--host`/`--port` in each `__main__.py`). They share a host, so the playground launches them on distinct ports by default: TTS `--port 11200`, ASR `--port 11300`.
 
 audio.cpp (OpenAI-compatible) runs in the devcontainer on `http://localhost:8080`. The Flask bridges default `audiocpp_uri=http://localhost:8080` (config.py). No frontend scaffolding exists — the playground is entirely new.
 
@@ -126,7 +126,7 @@ Browser native `<audio>` element for playing TTS output.
 ## Assumptions & Contingencies
 
 - **audio.cpp reachable**: `http://localhost:8080` (audio.cpp container in devcontainer). Verified by Flask `audiocpp_uri` default.
-- **Flask bridges reachable**: default `0.0.0.0:5000`; playground launches them on distinct ports (TTS `--port 5001`, ASR `--port 5002`). If not, user edits base URLs in `src/lib/config.ts`.
+ **Flask bridges reachable**: default `0.0.0.0`; playground launches them on distinct ports (TTS `--port 11200`, ASR `--port 11300`). If not, user edits base URLs in `src/lib/config.ts`.
 - **WAV format only**: ASR picker restricts to `.wav`/`.WAV`. Other formats rejected by audio.cpp.
 - **Single React app**: One unified app instead of separate pages.
 - **No backend for Next.js**: Frontend proxies directly to Flask servers. If CORS arises, add Next.js `next.config.js` `headers` middleware or enable Flask `CORS`.
@@ -134,7 +134,7 @@ Browser native `<audio>` element for playing TTS output.
 ## Discrepancies vs. Draft Plan (corrected here)
 
 1. **ASR multipart field name**: Draft used `formData.append("audio", file)`; source uses field **`file`** with filename `audio.wav`, type `audio/wav` (`wyoming_audiocpp_asr/audiocpp_client.py`).
-2. **Flask ports**: Draft assumed 5001/5002; both servers default `--port 5000`. Playground must use distinct ports.
+2. **Flask ports**: Draft assumed 5001/5002; both servers default `--port 5000`. Now default `--port 11200` (TTS) / `11300` (ASR); playground base URLs in `src/lib/config.ts` match.
 3. **ASR `/api/info` shape**: Draft implied a voice_model list; actual returns `{asr:[{name, attribution:{name,url}, installed, languages}]}`.
 4. **TTS `/` shape**: `{name, tts_model, tts_name, asr_model}` (voice name in `tts_name`, model id in `tts_model`).
 5. **ASR query params**: `?language` and optional `?model` (default model `hviske`, language `da` in config.py).

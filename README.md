@@ -54,7 +54,7 @@ audio.cpp is reached through its transcription endpoint:
 ## Run
 
 ```bash
-wyoming-audiocpp-asr --config config.json --port 5000
+wyoming-audiocpp-asr --config config.json --port 11300
 ```
 
 Options:
@@ -66,7 +66,7 @@ Options:
 | `--model` | `hviske` | audio.cpp model id to use. |
 | `--language` | from `config.json` | Language hint for audio.cpp. |
 | `--host` | `0.0.0.0` | Interface to bind. |
-| `--port` | `5000` | Port to listen on. |
+| `--port` | `11300` | Port to listen on. |
 | `--log-level` | `INFO` | Logging level. |
 
 ## Develop
@@ -133,10 +133,8 @@ optional; when omitted, supply it on the command line.
 audio.cpp is reached through its speech endpoint:
 `<audiocpp_uri>/v1/audio/speech`.
 
-## Run
-
 ```bash
-wyoming-audiocpp-tts --config config.json --port 5000
+wyoming-audiocpp-tts --config config.json --port 11200
 ```
 
 Options:
@@ -147,7 +145,7 @@ Options:
 | `--asr-model` | from `config.json` | audio.cpp model id used for transcription. |
 | `--audiocpp-uri` | from `config.json` | Base URI of the audio.cpp server. |
 | `--host` | `0.0.0.0` | Interface to bind. |
-| `--port` | `5000` | Port to listen on. |
+| `--port` | `11200` | Port to listen on. |
 | `--log-level` | `INFO` | Logging level. |
 | `--tts-voice0-model` | from `config.json` | TTS voice model id (e.g. `omnivoice`). |
 | `--tts-voice0-name` | from `config.json` | Voice name sent as audio.cpp `voice`. |

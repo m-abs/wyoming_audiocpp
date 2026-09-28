@@ -11,8 +11,8 @@ export default function Home() {
   const [models, setModels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [overrides, setOverrides] = useState<Overrides>({
-    ttsBase: "http://localhost:5001",
-    asrBase: "http://localhost:5002",
+    ttsBase: "http://localhost:11200",
+    asrBase: "http://localhost:11300",
   });
 
   useEffect(() => {
@@ -48,8 +48,8 @@ export default function Home() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">audio.cpp TTS/ASR Playground</h1>
             <p className="text-sm text-zinc-500">
-              Wyoming bridges · TTS <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:5001</code> · ASR{" "}
-              <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:5002</code>
+              Wyoming bridges · TTS <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11200</code> · ASR{" "}
+              <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11300</code>
             </p>
           </div>
           <StatusRow models={models} loading={loading} ttsBase={overrides.ttsBase} asrBase={overrides.asrBase} />
