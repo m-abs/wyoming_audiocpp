@@ -37,7 +37,17 @@ def create_app(config: Config) -> Flask:
 
     @app.route("/api/speech-to-text", methods=["POST"])
     def api_stt() -> Response:
-        if not request.data:
+        # A multipart upload (the normal client case) leaves ``request.data`` empty:
+        # Werkzeug moves the file part into ``request.files`` while parsing, so the
+        # cached raw body is empty by the time we read it. Read the bytes from there
+        # to reach audio.cpp; fall back to the raw body for a non-file POST. This is
+        # the single source of truth for the uploaded WAV bytes.
+        try:
+            stored = request.files.get("file")
+            data = stored.read() if stored is not None else request.get_data()
+        except (KeyError, ValueError):
+            data = request.get_data()
+        if not data:
             return Response("empty request", status=400)
 
         language = request.args.get("language")
@@ -45,7 +55,7 @@ def create_app(config: Config) -> Flask:
         endpoint = config.transcription_endpoint
 
         try:
-            data = audiocpp_client.transcribe(endpoint, request.data, model, language)
+            data = audiocpp_client.transcribe(endpoint, data, model, language)
         except Exception as error:  # noqa: BLE001 -- surface to Wyoming client
             logger.exception("audio.cpp transcription failed")
             return Response(f"error: {error}", status=502)
