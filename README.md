@@ -74,3 +74,93 @@ Options:
 ```bash
 pytest
 ```
+
+
+# Wyoming audio.cpp TTS
+
+A Wyoming protocol TTS service that bridges Home Assistant / Rhasspy to
+[audio.cpp](https://github.com/0xShug0/audio.cpp). Wyoming clients get a small,
+event-protocol HTTP surface while the bridge talks to audio.cpp's OpenAI-compatible
+speech endpoint and relays the audio result.
+
+This is the TTS stage. The matching ASR stage is `wyoming-audiocpp-asr`.
+
+## How it works
+
+audio.cpp is an OpenAI-compatible HTTP server, not a Wyoming service. This bridge
+converts between the two on every request:
+
+- `POST /api/tts` — synthesize audio for the `text` field.
+- `GET /` — report the configured TTS model, voice and ASR model.
+
+Internally it calls `POST /v1/audio/speech` and returns the audio as
+`audio/wav`.
+
+## Install
+
+Editable install from the project root (creates the `wyoming-audiocpp-tts`
+console script):
+
+```bash
+pip install -e .
+```
+
+Dev deps (black, flake8, isort, pytest):
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Configure
+
+Configuration is layered: `config.json` provides defaults and project settings,
+command-line flags override them. The default voice (model `omnivoice`) is
+optional; when omitted, supply it on the command line.
+
+```json
+{
+  "audiocpp_uri": "http://localhost:8080",
+  "asr_model": "hviske",
+  "tts_voice": {
+    "model": "omnivoice",
+    "name": "female",
+    "language": "da",
+    "speed": 1.0
+  }
+}
+```
+
+audio.cpp is reached through its speech endpoint:
+`<audiocpp_uri>/v1/audio/speech`.
+
+## Run
+
+```bash
+wyoming-audiocpp-tts --config config.json --port 5000
+```
+
+Options:
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--config` | `config.json` | Path to `config.json`. |
+| `--asr-model` | from `config.json` | audio.cpp model id used for transcription. |
+| `--audiocpp-uri` | from `config.json` | Base URI of the audio.cpp server. |
+| `--host` | `0.0.0.0` | Interface to bind. |
+| `--port` | `5000` | Port to listen on. |
+| `--log-level` | `INFO` | Logging level. |
+| `--tts-voice0-model` | from `config.json` | TTS voice model id (e.g. `omnivoice`). |
+| `--tts-voice0-name` | from `config.json` | Voice name sent as audio.cpp `voice`. |
+| `--tts-voice0-language` | from `config.json` | Language hint (e.g. `da`). |
+| `--tts-voice0-speed` | from `config.json` | Speaking rate multiplier. |
+| `--tts-voice0-instruct` | from `config.json` | `instruct` field forwarded verbatim. |
+| `--tts-voice0-extra-<key>` | — | Extra audio.cpp option (e.g. `--tts-voice0-extra-seed 42`). |
+
+`--tts-voice0-*` flags override `config.json`; if none are given, the voice must
+be configured in `config.json`, otherwise the service fails to start.
+
+## Develop
+
+```bash
+pytest
+```
