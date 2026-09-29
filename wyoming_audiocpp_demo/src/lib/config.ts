@@ -22,7 +22,7 @@ export const config = {
 
 // Runtime overrides (loaded from localStorage). Enables testing the playground
 // against non-local hosts without editing source.
-const KEY = "audiocpp-playground.ports";
+const KEY = "wyoming_audiocpp_demo.ports";
 export function loadOverrides(): Overrides {
   if (typeof window === "undefined") return { ...defaults };
   try {

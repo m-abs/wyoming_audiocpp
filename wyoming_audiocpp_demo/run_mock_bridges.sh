@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /workspaces/audiocpp-playground
+ cd /workspaces/wyoming_audiocpp_demo
 /workspaces/.venv/bin/python -m wyoming_audiocpp_tts --host 127.0.0.1 --port 11201 --tts-voice0-model omnivoice --tts-voice0-name TestVoice --tts-voice0-language da >/dev/null 2>&1 &
 TTS_PID=$!
 /workspaces/.venv/bin/python -m wyoming_audiocpp_asr --host 127.0.0.1 --port 11301 --model hviske >/dev/null 2>&1 &

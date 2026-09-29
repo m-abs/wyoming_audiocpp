@@ -60,15 +60,15 @@
         "name": "Playground (Next.js)",
         "type": "node",
         "request": "launch",
-        "program": "/workspaces/audiocpp-playground/node_modules/.bin/next",
+        "program": "/workspaces/wyoming_audiocpp_demo/node_modules/.bin/next",
         "args": [
             "dev",
             "--port",
             "11000"
         ],
-        "cwd": "/workspaces/audiocpp-playground",
+        "cwd": "/workspaces/wyoming_audiocpp_demo",
         "console": "integratedTerminal",
-        "localRoot": "/workspaces/audiocpp-playground/node_modules/.cache/next",
+        "localRoot": "/workspaces/wyoming_audiocpp_demo/node_modules/.cache/next",
         "skipFiles": [
             "**/node_modules/**",
             "<node_internals>/**"

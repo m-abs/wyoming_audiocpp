@@ -179,12 +179,12 @@ It uses mock bridges automatically when audio.cpp is unavailable; set
 `AUDIOCPP_URI` to exercise real bridges instead:
 
 ```bash
-cd audiocpp-playground
+cd wyoming_audiocpp_demo
 npm install
 npx playwright install chromium
 ./node_modules/.bin/next dev --port 11000
 # In another shell, from the repository root:
-python audiocpp-playground/tests/smoke.py
+python wyoming_audiocpp_demo/tests/smoke.py
 ```
 
 The smoke harness intentionally tolerates the known React hydration warning and

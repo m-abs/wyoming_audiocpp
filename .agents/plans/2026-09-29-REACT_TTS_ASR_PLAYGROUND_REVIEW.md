@@ -32,10 +32,10 @@
 ## 2. Playground Infrastructure
 
 ### Files Reviewed
-- `audiocpp-playground/mock_bridges.py`
-- `audiocpp-playground/run_mock_bridges.sh`
-- `audiocpp-playground/next.config.ts`
-- `audiocpp-playground/package.json`
+- `wyoming_audiocpp_demo/mock_bridges.py`
+- `wyoming_audiocpp_demo/run_mock_bridges.sh`
+- `wyoming_audiocpp_demo/next.config.ts`
+- `wyoming_audiocpp_demo/package.json`
 
 ### Findings
 ✅ All changes correct:
@@ -49,9 +49,9 @@
 ## 3. Playground Test Harness
 
 ### Files Reviewed
-- `audiocpp-playground/tests/launch_real.py`
-- `audiocpp-playground/tests/mock_runner.py`
-- `audiocpp-playground/tests/smoke.py`
+- `wyoming_audiocpp_demo/tests/launch_real.py`
+- `wyoming_audiocpp_demo/tests/mock_runner.py`
+- `wyoming_audiocpp_demo/tests/smoke.py`
 
 ### Findings
 ✅ **All resource management issues resolved:**

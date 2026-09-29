@@ -20,7 +20,7 @@ Build a React/Next.js frontend to:
 
 ### Step 1: Initialize Next.js project with React
 
-Command: `npx create-next-app@latest audiocpp-playground --typescript --tailwind --eslint --app --src-dir --no-import-alias`
+Command: `npx create-next-app@latest wyoming_audiocpp_demo --typescript --tailwind --eslint --app --src-dir --no-import-alias`
 
 Structure:
 - `src/app/page.tsx` - main playground UI

@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{ "uri": "file:///workspaces", "name": "wyoming-audiocpp" },
-		{ "uri": "file:///workspaces/audiocpp-playground", "name": "audiocpp-playground" }
+		{ "uri": "file:///workspaces/wyoming_audiocpp_demo", "name": "wyoming_audiocpp_demo" }
 	],
 	"settings": {
 		"python.defaultInterpreterPath": "/workspaces/.venv/bin/python",
