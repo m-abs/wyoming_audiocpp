@@ -162,3 +162,31 @@ be configured in `config.json`, otherwise the service fails to start.
 ```bash
 pytest
 ```
+## End-to-end tests
+
+The bridge suite is `tests/test_e2e_bridges.py`. It starts isolated TTS and ASR
+bridge subprocesses and uses `http://audio.cpp:8080` by default when that
+service is reachable:
+
+```bash
+pytest -q tests/test_e2e_bridges.py
+```
+AUDIOCPP_URI=http://audio.cpp:8080 pytest -q tests/test_e2e_bridges.py
+```
+The playground smoke harness requires Node dependencies, Playwright's Chromium,
+a running Next.js playground, and the bridge ports `11201` (TTS) and `11301` (ASR).
+It uses mock bridges automatically when audio.cpp is unavailable; set
+`AUDIOCPP_URI` to exercise real bridges instead:
+
+```bash
+cd audiocpp-playground
+npm install
+npx playwright install chromium
+./node_modules/.bin/next dev --port 11000
+# In another shell, from the repository root:
+python audiocpp-playground/tests/smoke.py
+```
+
+The smoke harness intentionally tolerates the known React hydration warning and
+empty model selector. It verifies the ASR model endpoint, TTS WAV response, and
+playground TTS/ASR interactions without patching that playground bug.

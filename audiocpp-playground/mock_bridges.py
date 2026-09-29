@@ -18,6 +18,8 @@ from flask import Flask, Response, jsonify, request
 
 def cors(resp):
     resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return resp
 
 
@@ -52,6 +54,8 @@ def info():
 # --- ASR bridge ----------------------------------------------------------------
 
 asr = Flask("mock_asr")
+tts_server = tts
+asr_server = asr
 
 
 @asr.after_request

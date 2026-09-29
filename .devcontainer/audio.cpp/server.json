@@ -5,7 +5,7 @@
   "device": 0,
   "lazy_load": true,
   "max_loaded_models": 1,
-  "busy_timeout_ms": 900000,
+  "busy_timeout_ms": 300000,
   "models": [
     {
       "id": "omnivoice",

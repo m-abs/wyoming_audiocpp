@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{ "uri": "file:///workspaces", "name": "wyoming-audiocpp" },
+		{ "uri": "file:///workspaces/audiocpp-playground", "name": "audiocpp-playground" }
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "/workspaces/.venv/bin/python",
+		"python.terminal.executeInFileDir": true,
+		"terminal.integrated.env.linux": {
+			"PATH": "/usr/local/share/nvm/versions/node/v24.21.0/bin:/workspaces/.venv/bin"
+		},
+		"files.exclude": {
+			"**/audio.cpp": true
+		}
+	}
+}
