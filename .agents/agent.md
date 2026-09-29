@@ -2,7 +2,7 @@
 
 ## Plans
 
-Plans are saved in `.agents/plans` and named `<DATE>_<NAME>.md`:
+First step efter approving a plan, the plan must be saved in `.agents/plans` and named `<DATE>_<NAME>.md`:
 
 - Directory: `.agents/plans`
 - Prefix: date (`YYYY-MM-DD`)
