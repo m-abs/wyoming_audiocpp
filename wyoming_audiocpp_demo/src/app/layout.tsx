@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "wyoming_audiocpp_demo",
+  title: "Wyoming Audio.cpp Demo",
   description: "Wyoming protocol TTS/ASR bridge to audio.cpp",
 };
 

@@ -45,7 +45,7 @@ export default function Home() {
       <main className="flex w-full max-w-5xl flex-1 flex-col gap-6 py-8 px-4 sm:px-8">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Wyoming TTS/ASR Playground</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Wyoming Audio.cpp Demo</h1>
             <p className="text-sm text-zinc-500">
               Wyoming bridges · TTS <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11201</code> · ASR{" "}
               <code className="rounded bg-black/[.04] px-1 py-0.5 dark:bg-white/[.06]">:11301</code>

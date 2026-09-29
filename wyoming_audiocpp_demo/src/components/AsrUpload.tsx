@@ -65,7 +65,7 @@ export function AsrUpload({
         type="file"
         accept=".wav,.WAV,audio/wav"
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-        className="text-sm"
+        className="file:mr-4 file:rounded-full file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-blue-100 dark:file:bg-blue-600 dark:file:text-blue-100 dark:hover:file:bg-blue-500"
       />
       <p className="text-xs text-zinc-500">
         16-bit 16 kHz mono WAV recommended. Other formats are rejected by audio.cpp at decode.
