@@ -4,7 +4,7 @@
 
 `wyoming_audiocpp_tts` currently ships as a Flask HTTP server exposing REST endpoints (`POST /api/tts`, `GET /`). Home Assistant and Rhasspy do not use this REST surface — they use the Wyoming protocol: an `AsyncTcpServer` listening on a TCP port and advertising itself via mDNS `_wyoming._tcp.local.` discovery. The TTS bridge has no zeroconf registration and no Wyoming event protocol, so it is invisible to HA/Rhasspy.
 
-End state: the TTS bridge becomes a real Wyoming service — `wyoming.AsyncTcpServer` over TCP with opt-in `HomeAssistantZeroconf` mDNS registration, an `AsyncEventHandler` that turns Wyoming TTS events into calls to audio.cpp, and a CLI that starts the TCP server by default. The existing Flask server (`tts_server.py`) is KEPT as an optional demo HTTP server, started only with `--web-server`, and a browser-facing demo UI (`web_server.py`) is added as a `--web-server` add-on (like `wyoming-piper`). Discovery reference: https://github.com/OHF-Voice/wyoming-piper.
+End state: the TTS bridge becomes a real Wyoming service — `wyoming.AsyncTcpServer` over TCP with opt-in `HomeAssistantZeroconf` mDNS registration, an `AsyncEventHandler` that turns Wyoming TTS events into calls to audio.cpp, and a CLI that starts the TCP server by default. The existing Flask server (`tts_server.py`) is KEPT as an optional demo HTTP server, started only with `--web-server`, and a browser-facing demo UI (`web_server.py`) is added as a `--web-server` add-on (like `wyoming-piper`). Discovery reference: https://github.com/OHF-Voice/wyoming-piper checked out in /tmp/wyoming-piper
 
 ## Approach
 
