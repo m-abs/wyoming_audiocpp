@@ -14,3 +14,7 @@ npm i -g @colbymchenry/codegraph
 ~/.bun/bin/omp install npm:@vndv/pi-codegraph
 
 codegraph init 
+
+npm i -g @kahme247/ompweb
+
+sudo chsh -s $(which zsh) vscode

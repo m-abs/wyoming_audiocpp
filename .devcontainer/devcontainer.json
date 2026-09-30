@@ -6,6 +6,44 @@
 	"service": "app",
 	"workspaceFolder": "/workspaces",
 	"postCreateCommand": "./.devcontainer/postCreate.sh",
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"[python]": {
+				"editor.tabSize": 4
+			},
+			"[yaml]": {
+				"editor.tabSize": 2
+			},
+			"[json]": {
+				"editor.tabSize": 2
+			},
+			// Set *default* container specific settings.json values on container create.
+			"settings": {
+				"editor.tabSize": 4,
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					},
+					"zsh": {
+						"path": "zsh"
+					},
+					"tmux": {
+						"path": "tmux",
+						"icon": "terminal-tmux"
+					}
+				}
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.vscode-python-envs",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy"
+			]
+		}
+	},
 	"features": {
 		"ghcr.io/devcontainers/features/node:2": {},
 		"ghcr.io/michidk/devcontainers-features/bun:1": {},
@@ -25,5 +63,11 @@
 				"vim"
 			]
 		}
-	}
+	},
+	"mounts": [
+		// Mount GitHub CLI configuration to share authentication with the container
+		"source=${localEnv:HOME}/.config/gh/,target=/home/vscode/.config/gh/,type=bind",
+		// Mount SSH keys to share authentication with the container
+		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
+	]
 }

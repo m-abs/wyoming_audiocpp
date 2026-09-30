@@ -5,6 +5,7 @@ services:
       - ..:/workspaces:cached
       - omp-data:/home/vscode/.omp
       - ${HOME}/.omp/agent:/home/vscode/.omp/agent
+      - omp-sessions:/home/vscode/.omp/agent/sessions
     command: sleep infinity
 
     environment:
@@ -20,6 +21,8 @@ services:
     networks:
       - host
       - audiocpp
+
+    working_dir: /workspaces
 
   audio.cpp:
     image: ghcr.io/0xshug0/audio.cpp:full-cuda12
@@ -46,6 +49,7 @@ services:
 
 volumes:
   omp-data:
+  omp-sessions:
 
 networks:
   host:
