@@ -33,14 +33,14 @@ def launch(
     """Start both bridges and wait until their HTTP endpoints answer."""
     global _PROCESSES
     uri_args = ["--audiocpp-uri", audiocpp_uri] if audiocpp_uri else []
-    common = ["--host", "127.0.0.1"]
     _PROCESSES = [
         subprocess.Popen(
             [
                 os.sys.executable,
                 "-m",
                 "wyoming_audiocpp_tts",
-                *common,
+                "--host",
+                "127.0.0.1",
                 "--port",
                 str(tts_port),
                 "--tts-voice0-model",
@@ -52,13 +52,19 @@ def launch(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ),
+        # The ASR bridge is a Wyoming TCP service; its demo HTTP surface
+        # (--web-server) is what the playground talks to.
         subprocess.Popen(
             [
                 os.sys.executable,
                 "-m",
                 "wyoming_audiocpp_asr",
-                *common,
-                "--port",
+                "--uri",
+                f"tcp://127.0.0.1:{asr_port - 11301 + 55001}",
+                "--web-server",
+                "--web-server-host",
+                "127.0.0.1",
+                "--web-server-port",
                 str(asr_port),
                 *uri_args,
                 *flags,

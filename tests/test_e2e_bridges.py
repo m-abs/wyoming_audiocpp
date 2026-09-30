@@ -20,9 +20,11 @@ Two launch modes:
   call raises and the bridge maps it to a ``502``. Deterministic; no audio.cpp
   needed.
 
-The TTS bridge must be given a voice (``--tts-voice0-*``) to serve; the ASR
-bridge just needs the model id (``--asr-model``). Ports are chosen outside the
-playground's defaults so they never clash with a running dev container.
+The TTS bridge must be given a voice (``--tts-voice0-*``) to serve. The ASR
+bridge is a Wyoming TCP service (``--uri``) whose optional demo HTTP surface
+(``--web-server``) is what the HTTP tests below exercise; one test drives the
+Wyoming TCP protocol directly. Ports are chosen outside the playground's
+defaults so they never clash with a running dev container.
 
 The ``test_data`` WAVs are ``float32``/``44.1 kHz`` stereo, which audio.cpp's
 transcriber does not accept (it requires 16-bit/16 kHz mono PCM). Uploading one
@@ -33,9 +35,11 @@ public bridge contract.
 
 from __future__ import annotations
 
+import asyncio
 import io
 import os
 import random
+import socket
 import struct
 import subprocess
 import time
@@ -108,25 +112,34 @@ def _is_wav(data: bytes) -> bool:
 # --------------------------------------------------------------------------- #
 
 class BridgeServer:
-    """A launched bridge subprocess bound to a test port."""
+    """A launched bridge subprocess bound to a test port.
 
-    def __init__(self, kind: str, port: int, audiocpp_uri: str) -> None:
+    The ASR bridge is a Wyoming TCP service (``--uri tcp://127.0.0.1:<tcp_port>``)
+    plus an optional demo HTTP surface (``--web-server --web-server-port
+    <port>``); the TTS bridge is still a plain HTTP server (``--port``).
+    """
+
+    def __init__(self, kind: str, port: int, audiocpp_uri: str,
+                tcp_port: int | None = None) -> None:
         self.kind = kind
         self.port = port
+        self.tcp_port = tcp_port
         self.process: subprocess.Popen[bytes] | None = None
         self._start(audiocpp_uri)
 
     def _start(self, audiocpp_uri: str) -> None:
-        common = ["--host", "127.0.0.1", "--port", str(self.port),
-                  "--audiocpp-uri", audiocpp_uri]
         if self.kind == "tts":
             cmd = [PY, "-m", "wyoming_audiocpp_tts", "--log-level", "WARNING"]
             cmd += ["--tts-voice0-model", "omnivoice", "--tts-voice0-name", "TestVoice",
-                    "--tts-voice0-language", "da"]
+                    "--tts-voice0-language", "da", "--host", "127.0.0.1",
+                    "--port", str(self.port), "--audiocpp-uri", audiocpp_uri]
         else:
-            cmd = [PY, "-m", "wyoming_audiocpp_asr", "--log-level", "WARNING"]
-            cmd += ["--model", "hviske"]
-        cmd += common
+            cmd = [PY, "-m", "wyoming_audiocpp_asr",
+                   "--model", "hviske",
+                   "--uri", f"tcp://127.0.0.1:{self.tcp_port}",
+                   "--web-server", "--web-server-host", "127.0.0.1",
+                   "--web-server-port", str(self.port),
+                   "--audiocpp-uri", audiocpp_uri]
         self.process = subprocess.Popen(
             cmd, cwd=REPO, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
@@ -137,15 +150,26 @@ class BridgeServer:
     def wait_up(self, path: str, timeout: float = 10.0) -> None:
         deadline = time.time() + timeout
         while time.time() < deadline:
-            if self.is_alive() and self._health(path):
+            if self.is_alive() and self._healthy(path):
                 return
             time.sleep(0.1)
         raise RuntimeError(f"{self.kind} bridge at :{self.port} did not come up")
 
-    def _health(self, path: str) -> bool:
+    def _healthy(self, path: str) -> bool:
+        if self.kind == "asr" and self.tcp_port is not None:
+            # The ASR bridge is a Wyoming TCP service; readiness is the TCP
+            # port accepting connections (the HTTP surface is a demo add-on).
+            return self._tcp_up()
         try:
             r = urlopen(f"http://127.0.0.1:{self.port}{path}", timeout=1.0)
             return r.status < 500
+        except Exception:
+            return False
+
+    def _tcp_up(self) -> bool:
+        try:
+            with socket.create_connection(("127.0.0.1", self.tcp_port), timeout=1.0):
+                return True
         except Exception:
             return False
 
@@ -203,7 +227,7 @@ def happy_servers(audiocpp_uri):
     if not _asr_upstream_accepts_wav(audiocpp_uri):
         pytest.skip("audio.cpp rejects the byte-valid WAV")
     servers = {"tts": BridgeServer("tts", 11291, audiocpp_uri),
-               "asr": BridgeServer("asr", 11391, audiocpp_uri)}
+               "asr": BridgeServer("asr", 11391, audiocpp_uri, tcp_port=11390)}
     for s in servers.values():
         s.wait_up("/")
     try:
@@ -218,7 +242,7 @@ def broken_servers():
     """Launch both bridges pointed at a dead upstream (502 on any call)."""
     dead = "http://127.0.0.1:1"
     servers = {"tts": BridgeServer("tts", 11292, dead),
-               "asr": BridgeServer("asr", 11392, dead)}
+               "asr": BridgeServer("asr", 11392, dead, tcp_port=11393)}
     for s in servers.values():
         s.wait_up("/")
     try:
@@ -310,6 +334,35 @@ def test_asr_forwards_test_data_wav(happy_servers):
     # Either the bridge caps the payload (413) or audio.cpp rejects the format
     # (502 upstream -> 502). Both prove the request reaches the upstream proxy.
     assert res.status_code in (502, 413), f"unexpected {res.status_code}: {res.text[:200]}"
+
+
+def test_asr_wyoming_tcp_transcribe(happy_servers):
+    """The ASR bridge speaks the Wyoming ASR event protocol over TCP."""
+    from wyoming.audio import AudioChunk, AudioStart, AudioStop
+    from wyoming.asr import Transcript, Transcribe
+    from wyoming.client import AsyncTcpClient
+
+    async def run():
+        # make_wav() carries a 44-byte RIFF header; the Wyoming AudioChunk
+        # payload is raw 16-bit/16 kHz mono PCM, so strip it.
+        pcm = make_wav()[44:]
+        async with AsyncTcpClient("127.0.0.1", 11390, read_timeout=120.0) as client:
+            await client.write_event(Transcribe(language="en").event())
+            await client.write_event(
+                AudioStart(rate=16_000, width=2, channels=1).event()
+            )
+            await client.write_event(AudioChunk(audio=pcm).event())
+            await client.write_event(AudioStop().event())
+            while True:
+                event = await client.read_event()
+                if event is None:
+                    return None
+                if isinstance(event, Transcript):
+                    return event
+
+    transcript = asyncio.run(run())
+    assert transcript is not None
+    assert isinstance(transcript.text, str)
 
 
 def _requests_toolbelt_or_requests(wav: bytes):

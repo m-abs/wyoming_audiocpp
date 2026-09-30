@@ -5,7 +5,7 @@ export type Overrides = {
 
 export const defaults: Overrides = {
   ttsBase: "http://localhost:11201",
-  asrBase: "http://localhost:11301",
+  asrBase: "http://localhost:55599",
 };
 
 // Base URLs for the Wyoming Flask bridges and audio.cpp.

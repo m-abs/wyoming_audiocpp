@@ -81,28 +81,7 @@ def create_app(config: Config) -> Flask:
 
 
 def fetch_programs(config: Config) -> Dict[str, Any]:
-    """List ASR programs and models available through audio.cpp."""
-    import requests
+    """List ASR programs available through the bridge (Wyoming ``Info``)."""
+    from .asr_handler import build_asr_info
 
-    try:
-        response = requests.get(f"{config.audiocpp_uri}/v1/models", timeout=10.0)
-        response.raise_for_status()
-        models = response.json().get("data", [])
-        asr_models: list[Dict[str, Any]] = []
-        for model in models:
-            if model.get("type") == "model" and model.get("task") == "asr":
-                asr_models.append(
-                    {
-                        "name": model["id"],
-                        "attribution": {
-                            "name": "audio.cpp",
-                            "url": "https://github.com/0xShug0/audio.cpp",
-                        },
-                        "installed": True,
-                        "languages": [model.get("language", "auto")],
-                    }
-                )
-        return {"asr": [{"name": config.model, "attribution": {"name": "audio.cpp"}}]}
-    except Exception as error:  # noqa: BLE001
-        logger.exception("failed to fetch audio.cpp models")
-        return {"asr": [{"name": config.model, "attribution": {"name": "audio.cpp"}}]}
+    return build_asr_info(config).to_dict()

@@ -1,5 +1,12 @@
 {
   "audiocpp_uri": "http://localhost:8080",
   "model": "hviske",
-  "language": "da"
+  "language": "da",
+  "uri": "tcp://0.0.0.0:55001",
+  "enable_zeroconf": false,
+  "zeroconf_name": null,
+  "web_server": false,
+  "web_server_host": "127.0.0.1",
+  "web_server_port": 5000,
+  "web_server_allow": null
 }
