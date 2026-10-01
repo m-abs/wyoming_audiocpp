@@ -19,7 +19,7 @@ import asyncio
 import io
 import logging
 import wave
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop

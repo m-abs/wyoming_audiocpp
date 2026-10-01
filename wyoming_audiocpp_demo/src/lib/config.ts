@@ -5,14 +5,10 @@ export type Overrides = {
 
 export const defaults: Overrides = {
   ttsBase: "http://localhost:11201",
-  asrBase: "http://localhost:55599",
+  asrBase: "http://localhost:11301",
 };
 
-// Base URLs for the Wyoming Flask bridges and audio.cpp.
-//
- // Both Flask bridges default to 0.0.0.0, so the playground must launch
- // them on distinct ports (TTS --port 11201, ASR --port 11301). audio.cpp
- // runs in the devcontainer on :8080 and is only needed for local curl checks.
+// Base URLs for the demo web server and audio.cpp.
 export const config = {
   ttsBase: defaults.ttsBase,
   asrBase: defaults.asrBase,

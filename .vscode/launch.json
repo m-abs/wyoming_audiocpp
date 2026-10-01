@@ -17,12 +17,8 @@
             "request": "launch",
             "module": "wyoming_audiocpp_asr",
             "args": [
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "55599",
-                "--audiocpp-uri",
-                "http://audio.cpp:8080"
+                "--uri",
+                "tcp://127.0.0.1:55599"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",
@@ -50,29 +46,24 @@
                 "--audiocpp-uri",
                 "http://audio.cpp:8080"
             ]
-        ],
-        "cwd": "/workspaces",
-        "console": "integratedTerminal",
-        "python": "/workspaces/.venv/bin/python",
-        "justMyCode": true
-    },
-    {
-        "name": "Playground (Next.js)",
-        "type": "node",
-        "request": "launch",
-        "program": "/workspaces/wyoming_audiocpp_demo/node_modules/.bin/next",
-        "args": [
-            "dev",
-            "--port",
-            "11000"
-        ],
-        "cwd": "/workspaces/wyoming_audiocpp_demo",
-        "console": "integratedTerminal",
-        "localRoot": "/workspaces/wyoming_audiocpp_demo/node_modules/.cache/next",
-        "skipFiles": [
-            "**/node_modules/**",
-            "<node_internals>/**"
-        ]
-    }
-]
+        },
+        {
+            "name": "Playground (Next.js)",
+            "type": "node",
+            "request": "launch",
+            "program": "/workspaces/wyoming_audiocpp_demo/node_modules/.bin/next",
+            "args": [
+                "dev",
+                "--port",
+                "11000"
+            ],
+            "cwd": "/workspaces/wyoming_audiocpp_demo",
+            "console": "integratedTerminal",
+            "localRoot": "/workspaces/wyoming_audiocpp_demo/node_modules/.cache/next",
+            "skipFiles": [
+                "**/node_modules/**",
+                "<node_internals>/**"
+            ]
+        }
+    ]
 }
