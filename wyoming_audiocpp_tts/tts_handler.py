@@ -34,7 +34,6 @@ from wyoming.tts import (
     SynthesizeChunk,
     SynthesizeStart,
     SynthesizeStop,
-    SynthesizeStopped,
 )
 
 logger = logging.getLogger("wyoming_audiocpp_tts")
@@ -77,22 +76,6 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             await self._handle_synthesize(event)
             return True
 
-        if SynthesizeStart.is_type(event.type):
-            await self._handle_synthesize_start(event)
-            return True
-
-        if SynthesizeChunk.is_type(event.type):
-            await self._handle_synthesize_chunk(event)
-            return True
-
-        if SynthesizeStop.is_type(event.type):
-            await self._handle_synthesize_stop(event)
-            return True
-
-        if SynthesizeStopped.is_type(event.type):
-            await self._handle_synthesize_stopped(event)
-            return False
-
         return True
 
     async def _handle_describe(self, event) -> None:
@@ -110,7 +93,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
                         description="audio.cpp text-to-speech",
                         version=None,
                         voices=self._build_tts_info(self.config.tts_voice),
-                        supports_synthesize_streaming=True,
+                        supports_synthesize_streaming=False,
                     )
                 ]
             ).event(),
@@ -145,32 +128,23 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             self._wav = None
 
     async def _handle_synthesize(self, event) -> None:
-        """Start a synthesize request and stream audio.cpp output to the WAV."""
-        from wyoming.tts import Synthesize as _Synthesize
+        """Start a synthesize request and stream audio.cpp output to the WAV.
 
-        synthesize = _Synthesize.from_event(event)
+        The terminating ``SynthesizeStop`` event and the WAV close run in a
+        ``finally`` so the client's stream is always terminated and the file
+        handle released, even if the upstream audio.cpp call fails mid-stream.
+        """
+        synthesize = Synthesize.from_event(event)
         self._open_wav()
         await self.write_event(SynthesizeStart().event())
-        async for audio in self._synthesize(synthesize):
-            if self._wav is not None:
-                self._wav.writeframes(audio)
-            await self.write_event(SynthesizeChunk(text="").event())
-
-        await self.write_event(SynthesizeStop().event())
-        self._close_wav()
-
-    async def _handle_synthesize_chunk(self, event) -> None:
-        """Emit an empty text chunk in response to an incoming chunk event."""
-        await self.write_event(SynthesizeChunk(text="").event())
-
-    async def _handle_synthesize_start(self, event) -> None:
-        """Client-driven start: close any open WAV and end the stream."""
-        self._close_wav()
-        await self.write_event(SynthesizeStop().event())
-
-    async def _handle_synthesize_stopped(self, event) -> None:
-        """Client-driven stop: close the WAV and disconnect."""
-        self._close_wav()
+        try:
+            async for audio in self._synthesize(synthesize):
+                if self._wav is not None:
+                    self._wav.writeframes(audio)
+                await self.write_event(SynthesizeChunk(text="").event())
+        finally:
+            self._close_wav()
+            await self.write_event(SynthesizeStop().event())
 
     async def _synthesize(self, synthesize):
         """Yield audio.cpp audio chunks for the synthesize request.
@@ -194,14 +168,3 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
         """Run a blocking generator in a thread pool and return its chunks."""
         loop = asyncio.get_running_loop()
         return loop.run_in_executor(None, lambda: list(func(*args, **kwargs)))
-
-    def _request_body(self, text: str) -> Dict[str, Any]:
-        """Build the audio.cpp request body, merging config voice with the text."""
-        from .config import VoiceConfig
-
-        voice = self.config.tts_voice
-        if voice is None:
-            return {"model": DEFAULT_VOICE_MODEL, "input": text}
-        return voice.request_body(text)
-
-

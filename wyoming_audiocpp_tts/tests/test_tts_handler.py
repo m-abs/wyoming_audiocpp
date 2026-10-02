@@ -15,18 +15,11 @@ from wyoming_audiocpp_tts.config import Config
 from wyoming_audiocpp_tts.tts_handler import AudioCppTtsEventHandler
 
 from wyoming.event import Event
-from wyoming.tts import (
-    Synthesize,
-    SynthesizeChunk,
-    SynthesizeStart,
-    SynthesizeStop,
-    SynthesizeStopped,
-)
+from wyoming.tts import Synthesize
 
 START = "synthesize-start"
 CHUNK = "synthesize-chunk"
 STOP = "synthesize-stop"
-STOPPED = "synthesize-stopped"
 
 
 def types(events):
@@ -78,21 +71,6 @@ def test_build_tts_info_voice():
     assert voice.installed is True
 
 
-def test_request_body_without_voice():
-    handler, _ = build_handler(None)
-    body = handler._request_body("hello")
-    assert body == {"model": "omnivoice", "input": "hello"}
-
-
-def test_request_body_with_voice():
-    handler, _ = build_handler(None)
-    body = handler._request_body("hello")
-    # The config voice has name=None, so request_body omits the voice key.
-    assert body["model"] == "omnivoice"
-    assert body["input"] == "hello"
-    assert "voice" not in body
-
-
 async def test_describe_writes_info():
     handler, recorded = build_handler(None)
     await handler.handle_event(Event(type="describe"))
@@ -104,7 +82,7 @@ async def test_describe_writes_info():
     assert program["installed"] is True
     assert program["description"] == "audio.cpp text-to-speech"
     assert program["version"] is None
-    assert program["supports_synthesize_streaming"] is True
+    assert program["supports_synthesize_streaming"] is False
     assert len(program["voices"]) == 1
     assert program["voices"][0]["name"] == "default"
 
@@ -146,19 +124,20 @@ async def test_synthesize_single_audio_chunk(tmp_path):
     assert types(recorded) == [START, CHUNK, STOP]
 
 
-async def test_synthesize_start_stops_stream():
-    handler, recorded = build_handler(None)
-    await handler.handle_event(SynthesizeStart().event())
+async def test_synthesize_upstream_failure_terminates_stream_and_closes_wav(tmp_path):
+    wav = tmp_path / "out.wav"
+    handler, recorded = build_handler(wav)
 
-    assert types(recorded) == [STOP]
-    assert handler._wav is None
+    def fake_synthesize(endpoint, voice, text, **kwargs):
+        raise RuntimeError("upstream audio.cpp error")
 
+    with mock.patch.object(audiocpp_client, "synthesize", side_effect=fake_synthesize):
+        with pytest.raises(RuntimeError):
+            await handler.handle_event(Synthesize(text="hello").event())
 
-async def test_synthesize_stopped_disconnects():
-    handler, recorded = build_handler(None)
-    result = await handler.handle_event(SynthesizeStopped().event())
-
-    assert result is False
+    # The client stream must still be terminated and the WAV closed even when
+    # the upstream audio.cpp call fails.
+    assert types(recorded) == [START, STOP]
     assert handler._wav is None
 
 
