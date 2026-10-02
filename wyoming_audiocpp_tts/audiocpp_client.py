@@ -9,6 +9,7 @@ of Wyoming-specific code so it can be tested without a running server.
 
 from __future__ import annotations
 
+import sys
 from typing import Any, Dict
 
 import requests
@@ -30,8 +31,17 @@ def text_to_speech(
     """
     body = voice.request_body(text)
 
-    response = requests.post(endpoint, json=body, timeout=timeout)
-    response.raise_for_status()
+    try:
+        response = requests.post(endpoint, json=body, timeout=timeout)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as exc:
+        print(
+            f"audio.cpp TTS request failed: {exc}\n"
+            f"  url: {endpoint}\n"
+            f"  body: {body}",
+            file=sys.stderr,
+        )
+        raise
     return response.content
 
 
@@ -54,8 +64,17 @@ def synthesize(
     """
     body = voice.request_body(text)
 
-    response = requests.post(endpoint, json=body, stream=True, timeout=timeout)
-    response.raise_for_status()
+    try:
+        response = requests.post(endpoint, json=body, stream=True, timeout=timeout)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as exc:
+        print(
+            f"audio.cpp synthesize request failed: {exc}\n"
+            f"  url: {endpoint}\n"
+            f"  body: {body}",
+            file=sys.stderr,
+        )
+        raise
 
     for chunk in response.iter_content(chunk_size=chunk_size):
         if chunk:

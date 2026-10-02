@@ -168,7 +168,7 @@ def build_asr_info(config: "Config"):
         name="audio.cpp", url="https://github.com/0xShug0/audio.cpp"
     )
     program = AsrProgram(
-        name="audio.cpp",
+        name="Wyoming Audio.cpp - asr",
         description="audio.cpp ASR bridge (non-streaming transcription)",
         installed=True,
         attribution=attribution,

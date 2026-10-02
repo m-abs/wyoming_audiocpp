@@ -10,8 +10,8 @@ from unittest import mock
 import pytest
 import wave
 
-from wyoming_audiocpp_tts import audiocpp_client
-from wyoming_audiocpp_tts.config import Config
+from wyoming_audiocpp_tts import __version__, audiocpp_client
+from wyoming_audiocpp_tts.config import Config, VoiceConfig
 from wyoming_audiocpp_tts.tts_handler import AudioCppTtsEventHandler
 
 from wyoming.event import Event
@@ -70,6 +70,14 @@ def test_build_tts_info_voice():
     assert voice.languages == ["en"]
     assert voice.installed is True
 
+def test_build_tts_info_language_is_list():
+    handler, _ = build_handler(None)
+    voice = VoiceConfig(name="female", language="da")
+    info = handler._build_tts_info(voice)
+    assert len(info) == 1
+    assert isinstance(info[0].languages, list)
+    assert info[0].languages == ["da"]
+
 
 async def test_describe_writes_info():
     handler, recorded = build_handler(None)
@@ -78,11 +86,11 @@ async def test_describe_writes_info():
     assert types(recorded) == ["info"]
     info = data(recorded)[0]
     program = info["tts"][0]
-    assert program["name"] == "audio.cpp"
+    assert program["name"] == "Wyoming Audio.cpp - tts"
     assert program["installed"] is True
     assert program["description"] == "audio.cpp text-to-speech"
-    assert program["version"] is None
-    assert program["supports_synthesize_streaming"] is False
+    assert program["version"] == __version__
+    assert program["supports_synthesize_streaming"] is True
     assert len(program["voices"]) == 1
     assert program["voices"][0]["name"] == "default"
 

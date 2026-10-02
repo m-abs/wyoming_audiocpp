@@ -179,7 +179,7 @@ async def test_handle_describe(handler, writer):
 
     info = Info.from_event(writer.first("info"))
     assert len(info.asr) == 1
-    assert info.asr[0].name == "audio.cpp"
+    assert info.asr[0].name == "Wyoming Audio.cpp - asr"
     assert info.asr[0].installed is True
     assert info.asr[0].models[0].name == MODEL
     assert info.asr[0].requires_external_vad is False

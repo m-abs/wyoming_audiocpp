@@ -102,8 +102,8 @@ def test_describe_returns_info():
     assert event.type == "info"
 
     program = event.data["tts"][0]
-    assert program["name"] == "audio.cpp"
+    assert program["name"] == "Wyoming Audio.cpp - tts"
     assert program["installed"] is True
-    assert program["supports_synthesize_streaming"] is False
+    assert program["supports_synthesize_streaming"] is True
     assert len(program["voices"]) == 1
     assert program["voices"][0]["name"] == "default"

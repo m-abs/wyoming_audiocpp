@@ -15,7 +15,7 @@ import sys
 
 from .config import Config
 
-__version__ = "0.1.0"
+from . import __version__
 
 
 def build_parser() -> argparse.ArgumentParser:

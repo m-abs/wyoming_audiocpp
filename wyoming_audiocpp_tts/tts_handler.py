@@ -14,19 +14,21 @@ placeholders while the audio bytes stream through.
 
 from dataclasses import dataclass
 import asyncio
-import logging
 import os
 import tempfile
 import wave
 from typing import TYPE_CHECKING, List, Optional
 
+from . import __version__
 from . import audiocpp_client
+
 from wyoming.info import (
     Attribution,
     Describe,
     Info,
     TtsProgram,
     TtsVoice,
+    TtsVoiceSpeaker,
 )
 from wyoming.server import AsyncEventHandler
 from wyoming.tts import (
@@ -35,8 +37,6 @@ from wyoming.tts import (
     SynthesizeStart,
     SynthesizeStop,
 )
-
-logger = logging.getLogger("wyoming_audiocpp_tts")
 
 DEFAULT_SAMPLE_RATE = 16000
 WIDTH_BYTES = 2
@@ -80,24 +80,23 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
 
     async def _handle_describe(self, event) -> None:
         """Send the service info in response to a Describe event."""
-        await self.write_event(
-            Info(
-                tts=[
-                    TtsProgram(
-                        attribution=Attribution(
-                            name="audio.cpp",
-                            url="https://github.com/mudam/audiocpp",
-                        ),
-                        name="audio.cpp",
-                        installed=True,
-                        description="audio.cpp text-to-speech",
-                        version=None,
-                        voices=self._build_tts_info(self.config.tts_voice),
-                        supports_synthesize_streaming=False,
+        tts_info = Info(
+                        tts=[
+                            TtsProgram(
+                                attribution=Attribution(
+                                    name="audio.cpp",
+                                    url="https://github.com/mudam/audiocpp",
+                                ),
+                                name="Wyoming Audio.cpp - tts",
+                                installed=True,
+                                description="audio.cpp text-to-speech",
+                                version=__version__,
+                                voices=self._build_tts_info(self.config.tts_voice),
+                                supports_synthesize_streaming=True,
+                            )
+                        ]
                     )
-                ]
-            ).event(),
-        )
+        await self.write_event(tts_info.event())
 
     def _build_tts_info(self, voice) -> List[TtsVoice]:
         """Build the Wyoming TTS voices for the service info message."""
@@ -107,11 +106,16 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             TtsVoice(
                 name=voice.name or "default",
                 description=voice.name or "audio.cpp voice",
-                languages=voice.language or ["en"],
-                attribution={"name": "audio.cpp", "url": "https://github.com/mudam/audiocpp"},
+                languages=[voice.language] if voice.language else ["en"],
+                attribution=Attribution(
+                    name="audio.cpp",
+                    url="https://github.com/mudam/audiocpp",
+                ),
                 installed=True,
                 version=None,
-                speakers=None,
+                speakers=[TtsVoiceSpeaker(
+                    name=voice.name or "default",
+                ),]
             )
         ]
 
