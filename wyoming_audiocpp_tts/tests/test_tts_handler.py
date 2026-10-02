@@ -17,9 +17,9 @@ from wyoming_audiocpp_tts.tts_handler import AudioCppTtsEventHandler
 from wyoming.event import Event
 from wyoming.tts import Synthesize
 
-START = "synthesize-start"
-CHUNK = "synthesize-chunk"
-STOP = "synthesize-stop"
+START = "audio-start"
+CHUNK = "audio-chunk"
+STOP = "audio-stop"
 
 
 def types(events):
@@ -107,10 +107,9 @@ async def test_synthesize_streams_audio_to_wav_and_events(tmp_path):
         await handler.handle_event(Synthesize(text="hello").event())
 
     assert types(recorded) == [START, CHUNK, CHUNK, STOP]
-    # Wyoming TTS carries the audio in the WAV; the relayed text chunks are
-    # empty placeholders.
+    # Wyoming TTS relays the raw PCM audio in each AudioChunk payload.
     chunk_events = [e for e in recorded if e.type == CHUNK]
-    assert all(e.data.get("text") == "" for e in chunk_events)
+    assert b"".join(e.payload for e in chunk_events) == b"PART1PART2"
 
     with wave.open(handler._wav_path, "rb") as read_wav:
         assert read_wav.getnchannels() == 1

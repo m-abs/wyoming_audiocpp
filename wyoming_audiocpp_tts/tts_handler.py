@@ -5,10 +5,10 @@ bridge relays the raw bytes and turns them back into TTS chunks on the edge
 (streaming). Reuses audiocpp_client.synthesize() and Config; only here do
 events map onto those calls.
 
-Streaming: emit an empty text chunk on ``SynthesizeStart``, then real chunks
-with progress after each audio.cpp batch. The synthesized audio is written to a
-WAV file on disk; Wyoming's ``SynthesizeChunk`` carries only empty ``text``
-placeholders while the audio bytes stream through.
+Streaming: emit ``AudioStart`` with the canonical format, then relay each
+audio.cpp batch as an ``AudioChunk`` carrying raw PCM bytes. The synthesized
+audio is also written to a WAV file on disk; the stream terminates with
+``AudioStop``.
 """
 
 
@@ -31,12 +31,8 @@ from wyoming.info import (
     TtsVoiceSpeaker,
 )
 from wyoming.server import AsyncEventHandler
-from wyoming.tts import (
-    Synthesize,
-    SynthesizeChunk,
-    SynthesizeStart,
-    SynthesizeStop,
-)
+from wyoming.audio import AudioChunk, AudioStart, AudioStop
+from wyoming.tts import Synthesize
 
 DEFAULT_SAMPLE_RATE = 16000
 WIDTH_BYTES = 2
@@ -134,21 +130,35 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
     async def _handle_synthesize(self, event) -> None:
         """Start a synthesize request and stream audio.cpp output to the WAV.
 
-        The terminating ``SynthesizeStop`` event and the WAV close run in a
+        The terminating ``AudioStop`` event and the WAV close run in a
         ``finally`` so the client's stream is always terminated and the file
         handle released, even if the upstream audio.cpp call fails mid-stream.
         """
         synthesize = Synthesize.from_event(event)
         self._open_wav()
-        await self.write_event(SynthesizeStart().event())
+        await self.write_event(
+            AudioStart(
+                rate=DEFAULT_SAMPLE_RATE,
+                width=WIDTH_BYTES,
+                channels=CHANNELS,
+            ).event()
+        )
+
         try:
             async for audio in self._synthesize(synthesize):
                 if self._wav is not None:
                     self._wav.writeframes(audio)
-                await self.write_event(SynthesizeChunk(text="").event())
+                await self.write_event(
+                    AudioChunk(
+                        audio=audio,
+                        rate=DEFAULT_SAMPLE_RATE,
+                        width=WIDTH_BYTES,
+                        channels=CHANNELS,
+                    ).event()
+                )
         finally:
             self._close_wav()
-            await self.write_event(SynthesizeStop().event())
+            await self.write_event(AudioStop().event())
 
     async def _synthesize(self, synthesize):
         """Yield audio.cpp audio chunks for the synthesize request.
