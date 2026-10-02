@@ -42,7 +42,7 @@ def test_text_to_speech_full_body():
         name="female",
         language="da",
         speed=1.5,
-        instruct="calm",
+        instruct="female",
         extra={"seed": 42},
     )
     captured = {}
@@ -59,11 +59,9 @@ def test_text_to_speech_full_body():
     assert captured["json"] == {
         "model": "omnivoice",
         "input": "hi",
-        "voice": "female",
         "language": "da",
         "speed": 1.5,
-        "instruct": "calm",
-        "options": {"seed": 42},
+        "options": {"instruct": "female", "seed": 42},
     }
 
 

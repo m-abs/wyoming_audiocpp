@@ -58,21 +58,24 @@ class VoiceConfig:
     def request_body(self, input: str) -> Dict[str, Any]:
         """Build the audio.cpp speech request body for ``input``.
 
-        Always includes ``model`` and ``input``. Each optional field (``voice``,
-        ``language``, ``speed``, ``instruct``) is included only when set. Any
-        populated ``extra`` is flattened into a single ``options`` object.
+        Always includes ``model`` and ``input``. ``language`` and ``speed`` are
+        included only when set (``speed`` coerced to a number). ``instruct`` and
+        any populated ``extra`` keys are collected into a single ``options``
+        object; the object is omitted when it would be empty. The voice ``name``
+        is for Home Assistant's service info and is never sent to audio.cpp.
         """
         body: Dict[str, Any] = {"model": self.model, "input": input}
-        if self.name is not None:
-            body["voice"] = self.name
         if self.language is not None:
             body["language"] = self.language
         if self.speed is not None:
-            body["speed"] = self.speed
+            body["speed"] = float(self.speed)
+        options: Dict[str, Any] = {}
         if self.instruct is not None:
-            body["instruct"] = self.instruct
+            options["instruct"] = self.instruct
         if self.extra:
-            body["options"] = self.extra
+            options.update(self.extra)
+        if options:
+            body["options"] = options
         return body
 
     def to_dict(self) -> Dict[str, Any]:

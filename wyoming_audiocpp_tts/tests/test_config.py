@@ -36,23 +36,29 @@ def test_voice_request_body_with_all_fields():
         name="female",
         language="da",
         speed=1.5,
-        instruct="calm",
+        instruct="female",
         extra={"seed": 42},
     )
     body = voice.request_body("hello")
     assert body["model"] == "omnivoice"
     assert body["input"] == "hello"
-    assert body["voice"] == "female"
     assert body["language"] == "da"
     assert body["speed"] == 1.5
-    assert body["instruct"] == "calm"
-    assert body["options"] == {"seed": 42}
+    assert body["options"] == {"instruct": "female", "seed": 42}
+    assert "voice" not in body
+
+
+def test_voice_request_body_speed_is_number():
+    voice = VoiceConfig(model="omnivoice", speed="1.0")
+    body = voice.request_body("hi")
+    assert body["speed"] == 1.0
+    assert isinstance(body["speed"], float)
 
 
 def test_voice_request_body_omits_unset_optional():
     voice = VoiceConfig(model="omnivoice", name="female")
     body = voice.request_body("hi")
-    assert body == {"model": "omnivoice", "input": "hi", "voice": "female"}
+    assert body == {"model": "omnivoice", "input": "hi"}
     assert "options" not in body
 
 

@@ -52,7 +52,6 @@ def test_success_passes_args_and_shapes_response():
     assert captured["json"] == {
         "model": MODEL,
         "input": "hjalp",
-        "voice": NAME,
         "language": LANGUAGE,
     }
     assert captured["timeout"] == 120.0

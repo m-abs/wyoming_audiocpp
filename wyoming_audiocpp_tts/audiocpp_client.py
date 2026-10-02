@@ -2,7 +2,7 @@
 
 audio.cpp exposes an OpenAI-compatible ``POST /v1/audio/speech`` endpoint that
 accepts a JSON body with ``model``, ``input`` and optional fields
-(``voice``, ``language``, ``speed``, ``options``), and returns raw audio bytes.
+(``language``, ``speed``, ``options``), and returns raw audio bytes.
 This module is the only place that talks to audio.cpp directly; it is kept free
 of Wyoming-specific code so it can be tested without a running server.
 """
