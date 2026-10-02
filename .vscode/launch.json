@@ -31,10 +31,8 @@
             "request": "launch",
             "module": "wyoming_audiocpp_tts",
             "args": [
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "11201",
+                "--uri",
+                "tcp://0.0.0.0:11201",
                 "--tts-voice0-model",
                 "omnivoice",
                 "--tts-voice0-name",
