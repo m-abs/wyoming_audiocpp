@@ -18,7 +18,14 @@
             "module": "wyoming_audiocpp_asr",
             "args": [
                 "--uri",
-                "tcp://0.0.0.0:55599"
+                "tcp://0.0.0.0:55001",
+                "--web-server",
+                "--web-server-host",
+                "0.0.0.0",
+                "--web-server-port",
+                "5000",
+                "--audiocpp-uri",
+                "http://audio.cpp:8080"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",
@@ -32,7 +39,12 @@
             "module": "wyoming_audiocpp_tts",
             "args": [
                 "--uri",
-                "tcp://0.0.0.0:11201",
+                "tcp://0.0.0.0:10200",
+                "--web-server",
+                "--web-server-host",
+                "0.0.0.0",
+                "--web-server-port",
+                "5001",
                 "--tts-voice0-model",
                 "omnivoice",
                 "--tts-voice0-name",
