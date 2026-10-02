@@ -8,3 +8,5 @@ build
 audio.cpp/
 __pycache__
 audio.cpp
+wyoming-piper/
+wyoming-faster-whisper

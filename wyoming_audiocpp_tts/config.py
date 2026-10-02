@@ -1,64 +1,66 @@
 """Configuration for the Wyoming audio.cpp TTS bridge.
 
-Configuration is layered:
-
-1. ``config.json`` with defaults and project settings.
-2. Command-line flags, which override config.json.
-
-audio.cpp is reached through its OpenAI-compatible speech endpoint. This bridge
-wraps that endpoint and relays the audio result as a Wyoming TTS service.
+Configuration is layered, later layers win in this order: defaults (the
+dataclass field values), then ``config.json`` with project settings and voice
+overrides as a ``tts_voice`` object plus per-scalar fields prefixed by
+``tts_voice0_<field>``, then ``WYO_<FIELD>`` environment variables where each
+value is upper-cased to match its dataclass name so a container can configure
+without flags or an edit here; finally command-line overrides on top.
 """
 
 from __future__ import annotations
 
+import os
+import json
 from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 DEFAULT_CONFIG_PATH = Path("config.json")
+DEFAULT_URI = "tcp://0.0.0.0:10200"
 DEFAULT_AUDIOCPP_URI = "http://localhost:8080"
 DEFAULT_ASR_MODEL = "hviske"
 DEFAULT_VOICE_MODEL = "omnivoice"
 
-# Fields audio.cpp accepts on the speech endpoint.
 _SPEECH_ENDPOINT = "/v1/audio/speech"
 
-# Prefix CLI ``--tts-voice0-<field>`` flags contribute to the single voice field.
-VOICE_FLAG_PREFIX = "tts_voice0_"
+# Fields audio.cpp accepts on the speech endpoint.
+_VOICE_FLAG_PREFIX = "tts_voice0_"
+_SCALAR_FIELDS = ("model", "name", "language", "speed", "instruct")
 
 
 @dataclass
 class VoiceConfig:
     """Per-voice settings forwarded to audio.cpp's speech endpoint.
 
-    ``model`` is the audio.cpp model id and the required field; ``name`` (the
-    ``voice`` field), ``language``, ``speed``, ``instruct`` and ``extra`` (the
-    ``options`` field) are optional per audio.cpp's request options.
+    ``model`` is the audio.cpp model id used for TTS; it defaults to omnivoice
+    unless overridden in config.json or on the command line via --tts-voice0-model and similar scalar flags that add their values into this voice object keyed by tts_voice<index>-<field>.
     """
 
     model: str = DEFAULT_VOICE_MODEL
     """audio.cpp model id to use. Defaults to ``omnivoice``."""
 
     name: Optional[str] = None
-    """audio.cpp ``voice`` field. ``None`` disables it."""
+    """Voice name passed to audio.cpp. ``None`` disables it."""
 
     language: Optional[str] = None
-    """audio.cpp ``language`` field. ``None`` disables it."""
+    """Language hint passed to audio.cpp. ``None`` disables it."""
 
     speed: Optional[float] = None
-    """audio.cpp ``speed`` field. ``None`` disables it."""
+    """Speech rate multiplier. ``None`` disables it."""
 
     instruct: Optional[str] = None
+    """Instruction string passed to audio.cpp. ``None`` disables it."""
 
     extra: Dict[str, Any] = field(default_factory=dict)
     """Extra audio.cpp ``options`` keys, e.g. ``seed``. Flattened verbatim."""
 
     def request_body(self, input: str) -> Dict[str, Any]:
         """Build the audio.cpp speech request body for ``input``.
-        ``model``, ``input``, ``voice``, ``language`` and ``speed`` are sent only
-        when set; ``instruct`` and ``extra`` (as ``options``) are sent only when
-        set, so a minimal ``VoiceConfig(model="omnivoice")`` produces
-        ``{"model": ..., "input": ...}``.
+
+        Always includes ``model`` and ``input``. Each optional field (``voice``,
+        ``language``, ``speed``, ``instruct``) is included only when set. Any
+        populated ``extra`` is flattened into a single ``options`` object.
         """
         body: Dict[str, Any] = {"model": self.model, "input": input}
         if self.name is not None:
@@ -70,171 +72,185 @@ class VoiceConfig:
         if self.instruct is not None:
             body["instruct"] = self.instruct
         if self.extra:
-            body["options"] = dict(self.extra)
+            body["options"] = self.extra
         return body
 
     def to_dict(self) -> Dict[str, Any]:
+        """Return the full voice mapping, all keys present (``None`` when unset)."""
         return {
             "model": self.model,
             "name": self.name,
             "language": self.language,
             "speed": self.speed,
             "instruct": self.instruct,
-            "extra": dict(self.extra),
+            "extra": self.extra,
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VoiceConfig":
-        return cls(
-            model=data.get("model", cls.model),
-            name=data.get("name"),
-            language=data.get("language"),
-            speed=data.get("speed"),
-            instruct=data.get("instruct"),
-            extra=dict(data.get("extra") or {}),
-        )
-
+        """Build a VoiceConfig from a dict, applying defaults for missing keys."""
+        result = cls()
+        for key in ("model", "name", "language", "speed", "instruct"):
+            if key in data:
+                setattr(result, key, data[key])
+        if "extra" in data:
+            result.extra = dict(data["extra"])
+        return result
 
 
 @dataclass
 class Config:
     """Resolved configuration for the Wyoming TTS bridge.
 
-    ``audiocpp_uri`` is the audio.cpp base URI and the required field; ``asr_model``
-    is the ASR model id (optional; empty disables it); ``tts_voice`` is the default
-    voice (optional; ``None`` disables it).
+    ``Config.from_args`` is the entry point; it produces a fully resolved object
+    that the server and CLI consume.
     """
 
     audiocpp_uri: str = DEFAULT_AUDIOCPP_URI
     """Base URI of the audio.cpp HTTP server, e.g. ``http://localhost:8080``."""
 
-    asr_model: Optional[str] = DEFAULT_ASR_MODEL
-    """audio.cpp model id used for transcription. Defaults to ``hviske``."""
+    asr_model: str = DEFAULT_ASR_MODEL
+    """audio.cpp ASR model id. Defaults to ``hviske``."""
 
     tts_voice: Optional[VoiceConfig] = None
-    """Default TTS voice. ``None`` disables it."""
+    """Default TTS voice. ``None`` disables TTS until one is configured."""
+
+    uri: str = DEFAULT_URI
+    """Wyoming TCP bind, e.g. ``tcp://0.0.0.0:10200``."""
+
+    enable_zeroconf: bool = False
+    """Whether to register mDNS ``_wyoming._tcp.local.`` discovery."""
+
+    zeroconf_name: Optional[str] = None
+    """mDNS service name. Defaults to the URI host, else ``wyoming-audiocpp-tts``."""
+
+    web_server: bool = False
+    """Whether to also start the demo Flask web server."""
+
+    web_server_host: str = "127.0.0.1"
+    """Interface for the demo web server."""
+
+    web_server_port: int = 5001
+    """Port for the demo web server."""
+
+    web_server_allow: Optional[List[str]] = None
+    """IP addresses/CIDRs the demo web server may bind to, or ``None`` for all."""
 
     @property
     def tts_endpoint(self) -> str:
-        """Full speech endpoint URL.
+        """Full speech endpoint URL, joining the base URI and the endpoint.
 
-        ``audiocpp_uri`` is a slash-prefix base, so the endpoint is joined with
-        exactly one ``/``; e.g. ``http://localhost:8080/v1/audio/speech``.
+        The URI's trailing slash is stripped so the join never produces a
+        double slash.
         """
         uri = self.audiocpp_uri.rstrip("/")
         return f"{uri}/{_SPEECH_ENDPOINT.lstrip('/')}"
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"audiocpp_uri": self.audiocpp_uri, "asr_model": self.asr_model, "tts_voice": self.tts_voice.to_dict()}
+    @staticmethod
+    def _merge_voice(current: Optional[VoiceConfig], overrides: Dict[str, Any]) -> VoiceConfig:
+        """Merge ``overrides`` onto ``current``; leave unset fields untouched.
+
+        ``extra`` merges additively (existing keys preserved); scalar fields are
+        replaced only when present in ``overrides``.
+        """
+        if current is None:
+            base = VoiceConfig()
+        else:
+            base = VoiceConfig(
+                model=current.model,
+                name=current.name,
+                language=current.language,
+                speed=current.speed,
+                instruct=current.instruct,
+                extra=dict(current.extra),
+            )
+        for key, value in overrides.items():
+            if key == "extra":
+                base.extra = {**base.extra, **value}
+            elif hasattr(base, key):
+                setattr(base, key, value)
+        return base
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Config":
-        result = cls()
-        for key, value in data.items():
-            if key in cls.__dataclass_fields__:
-                field = cls.__dataclass_fields__[key]
-                if field.type is not None and "VoiceConfig" in field.type and isinstance(value, dict):
-                    setattr(result, key, VoiceConfig.from_dict(value))
-                else:
-                    setattr(result, key, value)
-        return result
+        """Build config from a dict, converting a nested ``tts_voice`` mapping."""
+        voice_data = data.get("tts_voice")
+        voice = VoiceConfig.from_dict(voice_data) if isinstance(voice_data, dict) else None
+        return cls(
+            audiocpp_uri=data.get("audiocpp_uri", DEFAULT_AUDIOCPP_URI),
+            asr_model=data.get("asr_model", DEFAULT_ASR_MODEL),
+            tts_voice=voice,
+        )
 
-    def _apply(self, overrides: Dict[str, Any]) -> "Config":
-        """Return a copy of ``self`` with ``overrides`` applied.
+    def _apply_env(self) -> "Config":
+        """Return a copy of self with ``WYO_<FIELD>`` env vars applied.
 
-        Existing values (e.g. loaded from ``config.json``) are preserved; only the
-        keys present in ``overrides`` are changed. The starting point is ``self``,
-        not the defaults, so ``from_args`` keeps the file-loaded values unless a
-        CLI flag supplies them.
+        Top-level fields and voice scalar fields are read from the environment
+        where each key is upper-cased to match the dataclass field name.
         """
         result = self
-        for key, value in overrides.items():
-            if key in self.__dataclass_fields__:
-                setattr(result, key, value)
+        for field_name in ("audiocpp_uri", "asr_model"):
+            env_key = f"WYO_{field_name.upper()}"
+            if env_key in os.environ:
+                setattr(result, field_name, os.environ[env_key])
+
+        voice_env: Dict[str, Any] = {}
+        for field_name in _SCALAR_FIELDS:
+            env_key = f"WYO_{field_name.upper()}"
+            if env_key in os.environ:
+                value = os.environ[env_key]
+                voice_env[field_name] = float(value) if field_name == "speed" else value
+        if voice_env:
+            current = self.tts_voice if self.tts_voice is not None else VoiceConfig()
+            merged = self._merge_voice(current, voice_env)
+            result.tts_voice = merged
         return result
 
     @classmethod
-    def _merge_voice(cls, current: "VoiceConfig", overrides: Dict[str, Any]) -> "VoiceConfig":
-        """Return a copy of ``current`` with ``overrides`` applied.
+    def from_args(cls, config_path: Optional[Path] = None, **overrides: Any) -> "Config":
+        """Build config: config.json (if present), then env vars, then CLI.
 
-        ``overrides`` is the raw ``voice_overrides`` map (``model``, ``name``,
-        ``language``, ``speed``, ``instruct``, plus ``extra``). Scalar voice
-        fields are overridden only when present; ``extra`` is deep-merged.
-        ``fields(VoiceConfig)`` is used explicitly rather than ``fields(cls)`` so
-        this works whether called on ``VoiceConfig`` or ``Config``.
+        None override values are ignored, so a missing flag keeps the
+        environment/config.json value (which itself defaults if absent).
         """
-        result = current if current is not None else VoiceConfig(model="")
-        for field in fields(VoiceConfig):
-            if field.name == "extra":
-                continue
-            value = overrides.get(field.name)
-            if value is not None:
-                setattr(result, field.name, value)
-        if "extra" in overrides:
-            result.extra.update(overrides["extra"])
-        return result
+        data: Dict[str, Any] = {}
+        if config_path is not None:
+            path = Path(config_path)
+            if path.exists():
+                data = json.loads(path.read_text(encoding="utf-8"))
 
-    def validate(self) -> None:
-        if not self.audiocpp_uri:
-            raise ValueError("audiocpp_uri must be set")
-        if not self.asr_model:
-            raise ValueError("asr_model must be set")
-
-        scheme, _, rest = self.audiocpp_uri.partition("://")
-        if scheme not in ("http", "https"):
-            raise ValueError(
-                f"audiocpp_uri scheme must be http or https: {self.audiocpp_uri}"
-            )
-
-        if not self.tts_voice:
-            raise ValueError("No TTS voice configured")
-
-
-        if not self.tts_voice.model:
-            raise ValueError("tts_voice.model must be set")
-    @classmethod
-    def from_args(
-        cls,
-        config_path: Optional[Path] = None,
-        *,
-        asr_model: Optional[str] = None,
-        audiocpp_uri: Optional[str] = None,
-        voice_overrides: Optional[Dict[str, Any]] = None,
-    ) -> "Config":
-        """Build config from an optional ``config.json`` then CLI overrides.
-
-        ``None`` CLI values are ignored, so a missing flag keeps the config.json
-        value (which itself defaults if absent). ``voice_overrides`` maps CLI
-        ``--tts-voice0-<field>`` flags to voice fields; if any is present, the
-        resulting voice replaces any file-supplied voice.
-        """
-        data = {}
-        config_path = Path(config_path) if config_path is not None else None
-        if config_path and config_path.exists():
-            import json
-
-            try:
-                data = json.loads(config_path.read_text(encoding="utf-8"))
-            except ValueError as exc:
-                raise ValueError(f"{config_path}: {exc}") from exc
         config = cls.from_dict(data)
+        config = config._apply_env()
 
-        overrides: Dict[str, Any] = {}
-        if asr_model is not None:
-            overrides["asr_model"] = asr_model
-        if audiocpp_uri is not None:
-            overrides["audiocpp_uri"] = audiocpp_uri
+        for key, value in overrides.items():
+            if value is not None and hasattr(config, key):
+                setattr(config, key, value)
+
+        voice_overrides = overrides.pop("voice_overrides", None)
         if voice_overrides:
-            # ``from_args`` receives CLI overrides keyed with the
-            # ``tts_voice0_`` prefix; ``_merge_voice`` works with the plain
-            # voice field names, so strip the prefix before merging.
-            stripped = {
-                (key[len(VOICE_FLAG_PREFIX):] if key.startswith(VOICE_FLAG_PREFIX) else key): value
-                for key, value in voice_overrides.items()
-            }
-            voice = cls._merge_voice(config.tts_voice, stripped)
-            overrides["tts_voice"] = voice
+            stripped: Dict[str, Any] = {}
+            for key, value in voice_overrides.items():
+                if key.startswith(_VOICE_FLAG_PREFIX):
+                    stripped[key[len(_VOICE_FLAG_PREFIX):]] = value
+                else:
+                    stripped[key] = value
+            config.tts_voice = cls._merge_voice(config.tts_voice, stripped)
 
-        config = config._apply(overrides)
         config.validate()
         return config
+
+    def validate(self) -> None:
+        """Validate the resolved config, raising ``ValueError`` on a bad value.
+
+        Checks run in a fixed order so callers get the first problem found.
+        """
+        if self.tts_voice is None:
+            raise ValueError("No TTS voice configured")
+        if not self.tts_voice.model:
+            raise ValueError("tts_voice.model must be set")
+        if not self.asr_model:
+            raise ValueError("asr_model must be set")
+        if not self.audiocpp_uri.startswith(("http://", "https://")):
+            raise ValueError(f"audiocpp_uri scheme must be http or https: {self.audiocpp_uri}")
+        if self.web_server and self.web_server_port <= 0:
+            raise ValueError("web_server_port must be > 0 when web_server is enabled")

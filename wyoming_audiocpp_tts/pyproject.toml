@@ -21,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "wyoming>=1.10.2,<2",
-    "flask>=3.0,<4",
     "requests>=2.31,<3",
 ]
 
@@ -61,4 +60,11 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "requests",
+]
+
+# Demo browser web server (--web-server); Flask is only imported on that path,
+# so it is optional rather than a hard dependency.
+web = [
+    "flask>=3.0,<4",
+    "werkzeug",
 ]

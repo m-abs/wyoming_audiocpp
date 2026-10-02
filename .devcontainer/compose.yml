@@ -11,6 +11,7 @@ services:
     environment:
       - TZ=Europe/Copenhagen
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - PYTHON_AUTO_VRUN=1
 
     depends_on:
       - audio.cpp

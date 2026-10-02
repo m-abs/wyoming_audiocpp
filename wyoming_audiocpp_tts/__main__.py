@@ -1,4 +1,11 @@
-"""Command-line entry point for wyoming_audiocpp-tts."""
+"""Command-line entry point for wyoming_audiocpp_tts.
+
+The default is to start a Wyoming TCP service (server.py) that speaks the
+Wyoming event protocol so Home Assistant and Rhasspy can discover it via mDNS.
+The Flask HTTP server (tts_server.py) is kept only as an optional demo, started
+with ``--web-server``; importing it here would couple the default entry point to
+the optional ``web`` dependencies.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +14,8 @@ import logging
 import sys
 
 from .config import Config
+
+__version__ = "0.1.0"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,21 +37,62 @@ def build_parser() -> argparse.ArgumentParser:
         help="Base URI of the audio.cpp HTTP server (default from config.json)",
     )
     _add_voice_scalar_args(parser)
+    _add_voice_extra_args(parser)
+
+    # Wyoming TCP service (the default entry point).
     parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="Interface to bind (default: 0.0.0.0)",
+        "--uri",
+        default="tcp://0.0.0.0:10200",
+        help="Wyoming TCP bind, tcp://host:port (default: tcp://0.0.0.0:10200)",
     )
     parser.add_argument(
-        "--port",
+        "--zeroconf",
+        action="store_true",
+        help="Register mDNS _wyoming._tcp.local. discovery (default off)",
+    )
+
+    # Optional demo web server.
+    parser.add_argument(
+        "--web-server",
+        action="store_true",
+        help="Run the demo browser web server in a background thread "
+        "(requires the 'web' optional dependencies)",
+    )
+    parser.add_argument(
+        "--web-server-host",
+        default="127.0.0.1",
+        help="Interface for the demo web server (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--web-server-port",
         type=int,
-        default=11201,
-        help="Port to listen on (default: 11201)",
+        default=5001,
+        help="Port for the demo web server (default: 5001)",
     )
     parser.add_argument(
-        "--log-level",
-        default="INFO",
-        help="Logging level (default: INFO)",
+        "--web-server-allow",
+        action="append",
+        metavar="ADDRESS",
+        help="Only serve the demo web server to this IP/CIDR (repeatable). "
+        "The UI has no authentication, so restrict it whenever the bind address "
+        "is reachable by anything but the intended client.",
+    )
+
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Log DEBUG messages",
+    )
+    parser.add_argument(
+        "--log-format",
+        default=logging.BASIC_FORMAT,
+        help="Format for log messages",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"wyoming-audiocpp-tts {__version__}",
+        help="Print version and exit",
     )
     return parser
 
@@ -50,38 +100,25 @@ def build_parser() -> argparse.ArgumentParser:
 def _add_voice_scalar_args(parser: argparse.ArgumentParser) -> None:
     """Add scalar ``--tts-voice0-<field>`` flags for the single default voice.
 
-    Fields are ``model``, ``name``, ``language``, ``speed`` and ``instruct``;
-    ``None`` defaults keep the ``config.json`` value (see ``Config.from_args``).
-    Any of these flags present replaces the file-supplied voice.
+    Fields mirror the ``VoiceConfig`` scalars (``model``, ``name``,
+    ``language``, ``speed``, ``instruct``).
     """
     for field in ("model", "name", "language", "speed", "instruct"):
         parser.add_argument(
             f"--tts-voice0-{field}",
-            default=None,
-            help=f"Voice {field} (default from config.json)",
+            help=f"Override the {field} for the default TTS voice",
         )
 
 
 def _add_voice_extra_args(parser: argparse.ArgumentParser) -> None:
     """Add ``--tts-voice0-extra-<key>`` arguments for any provided audio.cpp options.
 
-    The keys are discovered from ``argv`` so the user can pass any audio.cpp
-    ``options`` field (``seed``, ``response_format``, ``voice_ref``, ...) without
-    editing the parser ahead of time. Duplicate keys are not re-added.
+    Any ``--tts-voice0-extra-<key>=<value>`` flag is collected into a single
+    ``tts_voice0_extra`` dict (option name -> value, skipping ``None``).
     """
-    prefix = "--tts-voice0-extra-"
-    keys = []
-    for token in sys.argv[1:]:
-        if token.startswith(prefix):
-            key = token[len(prefix):]
-            if key and key not in keys:
-                keys.append(key)
-    for key in keys:
-        parser.add_argument(
-            f"{prefix}{key}",
-            default=None,
-            help=f"Extra audio.cpp option for the voice (e.g. --tts-voice0-extra-seed 42)",
-        )
+    known = {"seed", "format", "lang", "role", "response_format", "n"}
+    for key in known:
+        parser.add_argument(f"--tts-voice0-extra-{key}", help=f"audio.cpp extra {key}")
 
 
 def parse_args(argv=None) -> argparse.Namespace:
@@ -93,8 +130,8 @@ def main(argv=None) -> int:
     args = parse_args(argv)
 
     logging.basicConfig(
-        level=getattr(logging, str(args.log_level).upper(), logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format=args.log_format,
     )
 
     try:
@@ -102,16 +139,54 @@ def main(argv=None) -> int:
             args.config,
             asr_model=args.asr_model,
             audiocpp_uri=args.audiocpp_uri,
+            uri=args.uri,
+            enable_zeroconf=args.zeroconf,
+            web_server=args.web_server,
+            web_server_host=args.web_server_host,
+            web_server_port=args.web_server_port,
+            web_server_allow=args.web_server_allow,
             voice_overrides=_voice_overrides(args),
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    from .tts_server import create_app
+    # Optional demo web server, in a background thread, started before the
+    # Wyoming server: it only reads config, and a missing dependency or a bad
+    # port should fail now rather than after the wait.
+    if args.web_server:
+        try:
+            from . import tts_server, web_server
+            from .web_server import make_tts_web_server, parse_allow_list, run_web_server
+        except ImportError as err:
+            print(f"error: --web-server requires the 'web' optional dependencies ({err})", file=sys.stderr)
+            return 2
 
-    app = create_app(config)
-    app.run(host=args.host, port=args.port)
+        if args.web_server_allow:
+            try:
+                parse_allow_list(args.web_server_allow)
+            except ValueError as exc:
+                print(f"error: invalid --web-server-allow value ({exc})", file=sys.stderr)
+                return 2
+
+        try:
+            flask_app = tts_server.create_app(config)
+            web_app = make_tts_web_server(config, flask_app)
+            thread = run_web_server(
+                web_app, args.web_server_host, args.web_server_port, allow_list=args.web_server_allow
+            )
+        except OSError as exc:
+            print(
+                f"error: could not start demo web server on "
+                f"{args.web_server_host}:{args.web_server_port} ({exc})",
+                file=sys.stderr,
+            )
+            return 2
+
+    # Start the Wyoming TCP server (the default entry point).
+    from .server import create_tcp_server
+
+    create_tcp_server(config)
     return 0
 
 

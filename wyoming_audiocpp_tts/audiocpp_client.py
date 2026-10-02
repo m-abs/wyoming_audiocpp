@@ -33,3 +33,30 @@ def text_to_speech(
     response = requests.post(endpoint, json=body, timeout=timeout)
     response.raise_for_status()
     return response.content
+
+
+from collections.abc import Iterator
+
+
+def synthesize(
+    endpoint: str,
+    voice: Any,
+    text: str,
+    *,
+    chunk_size: int = 4096,
+    timeout: float = 120.0,
+) -> Iterator[bytes]:
+    """Stream ``text`` audio from audio.cpp as successive ``bytes`` chunks.
+
+    audio.cpp's speech endpoint streams the response in batches, so this yields
+    each batch as it arrives rather than buffering the whole file. A response
+    that is not ``2xx`` raises the upstream error (via ``raise_for_status``).
+    """
+    body = voice.request_body(text)
+
+    response = requests.post(endpoint, json=body, stream=True, timeout=timeout)
+    response.raise_for_status()
+
+    for chunk in response.iter_content(chunk_size=chunk_size):
+        if chunk:
+            yield chunk

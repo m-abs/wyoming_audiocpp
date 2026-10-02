@@ -18,7 +18,7 @@
             "module": "wyoming_audiocpp_asr",
             "args": [
                 "--uri",
-                "tcp://127.0.0.1:55599"
+                "tcp://0.0.0.0:55599"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",
@@ -32,7 +32,7 @@
             "module": "wyoming_audiocpp_tts",
             "args": [
                 "--host",
-                "127.0.0.1",
+                "0.0.0.0",
                 "--port",
                 "11201",
                 "--tts-voice0-model",
