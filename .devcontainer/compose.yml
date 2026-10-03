@@ -25,9 +25,6 @@ services:
     ports:
       - "0.0.0.0:55001:55001"   # ASR (Wyoming)
       - "0.0.0.0:10200:10200"   # TTS (Wyoming)
-      - "127.0.0.1:5000:5000"    # ASR web server (HTTP, host localhost only)
-      - "127.0.0.1:5001:5001"    # TTS web server (HTTP, host localhost only)
-      - "127.0.0.1:11000:11000"  # Demo playground (Next.js, host localhost only)
 
     working_dir: /workspaces
 

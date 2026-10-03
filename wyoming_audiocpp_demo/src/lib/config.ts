@@ -4,8 +4,8 @@ export type Overrides = {
 };
 
 export const defaults: Overrides = {
-  ttsBase: "http://localhost:11201",
-  asrBase: "http://localhost:11301",
+  ttsBase: "http://localhost:5001",
+  asrBase: "http://localhost:5000",
 };
 
 // Base URLs for the demo web server and audio.cpp.

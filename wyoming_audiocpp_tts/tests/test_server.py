@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from wyoming_audiocpp_tts import audiocpp_client
-from wyoming_audiocpp_tts.config import Config
+from wyoming_audiocpp_tts.config import Config, VoiceConfig
 from wyoming_audiocpp_tts.tts_server import create_app
 
 MODEL = "omnivoice"
@@ -22,12 +22,14 @@ def post_text(client, body, **params):
     return response
 
 
+def _config(voices=None):
+    if voices is None:
+        return Config.from_args(None)
+    return Config(tts_voices=voices)
+
+
 def test_success_passes_args_and_shapes_response():
-    config = Config.from_args(None, asr_model="hviske", voice_overrides={
-        "tts_voice0_model": MODEL,
-        "tts_voice0_name": NAME,
-        "tts_voice0_language": LANGUAGE,
-    })
+    config = _config([VoiceConfig(model=MODEL, name=NAME, language=LANGUAGE)])
     client = build_client(config)
 
     captured = {}
@@ -57,8 +59,8 @@ def test_success_passes_args_and_shapes_response():
     assert captured["timeout"] == 120.0
 
 
-def test_success_forwards_extra():
-    config = Config.from_args(None, voice_overrides={"tts_voice0_model": MODEL, "tts_voice0_extra": {"seed": 7}})
+def test_success_forwards_options():
+    config = _config([VoiceConfig(model=MODEL, options={"seed": 7})])
     client = build_client(config)
 
     captured = {}
@@ -74,7 +76,7 @@ def test_success_forwards_extra():
 
 
 def test_model_defaults_to_config():
-    config = Config.from_args(None, voice_overrides={"tts_voice0_model": MODEL})
+    config = _config([VoiceConfig(model=MODEL)])
     client = build_client(config)
 
     captured = {}
@@ -92,21 +94,21 @@ def test_model_defaults_to_config():
 
 
 def test_empty_request_rejected():
-    config = Config.from_args(None, voice_overrides={"tts_voice0_model": MODEL})
+    config = _config([VoiceConfig(model=MODEL)])
     client = build_client(config)
     response = post_text(client, {})
     assert response.status_code == 400
 
 
 def test_missing_text_rejected():
-    config = Config.from_args(None, voice_overrides={"tts_voice0_model": MODEL})
+    config = _config([VoiceConfig(model=MODEL)])
     client = build_client(config)
     response = post_text(client, {})
     assert response.status_code == 400
 
 
 def test_audiocpp_error_returns_502():
-    config = Config.from_args(None, voice_overrides={"tts_voice0_model": MODEL})
+    config = _config([VoiceConfig(model=MODEL)])
     client = build_client(config)
 
     def boom(url, **kwargs):
@@ -119,15 +121,21 @@ def test_audiocpp_error_returns_502():
     assert "audio.cpp exploded" in response.get_data(as_text=True)
 
 
-def test_index_reports_voice():
-    config = Config.from_args(None, voice_overrides={
-        "tts_voice0_model": MODEL,
-        "tts_voice0_name": NAME,
-    })
+def test_index_reports_voices():
+    config = _config([VoiceConfig(model=MODEL, name=NAME)])
     client = build_client(config)
     response = client.get("/")
     body = response.get_json()
     assert body["name"] == "wyoming_audiocpp_tts"
-    assert body["tts_model"] == MODEL
-    assert body["tts_name"] == NAME
-    assert body["asr_model"] == "hviske"
+    assert body["tts_voices"] == [NAME]
+
+
+def test_api_voices_endpoint():
+    config = _config([VoiceConfig(model=MODEL, name="female"), VoiceConfig(model=MODEL, name="male")])
+    client = build_client(config)
+    response = client.get("/api/voices")
+    body = response.get_json()
+    assert body["voices"] == [
+        {"name": "female", "model": MODEL},
+        {"name": "male", "model": MODEL},
+    ]

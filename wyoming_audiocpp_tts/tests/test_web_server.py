@@ -22,10 +22,7 @@ from wyoming_audiocpp_tts.web_server import (
 
 
 def _config() -> Config:
-    return Config.from_args(
-        None,
-        voice_overrides={"tts_voice0_model": "omnivoice"},
-    )
+    return Config.from_args(None)
 
 
 def _client(config: Config, allow: Optional[List[str]] = None) -> Any:
@@ -70,7 +67,7 @@ def test_health(client: Any) -> None:
 def test_api_status_reports_config(client: Any) -> None:
     status = client.get("/api/status").get_json()
     assert status["service"] == "wyoming-audiocpp-tts"
-    assert status["tts_model"] == "omnivoice"
+    assert status["tts_voices"] == ["omnivoice"]
 
 
 def test_base_app_index_is_overridden(client: Any) -> None:

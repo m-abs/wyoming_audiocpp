@@ -22,7 +22,7 @@ from .config import Config
 
 logger = logging.getLogger("wyoming_audiocpp_asr")
 
-DEFAULT_SERVICE_NAME = "wyoming-audiocpp-asr"
+ASR_SERVICE_NAME = "wyoming-audiocpp-asr"
 
 
 def create_handler(reader, writer, config: Config) -> AudioCppAsrEventHandler:
@@ -36,11 +36,9 @@ def handler_factory(config: Config):
 
 
 def zeroconf_name(config: Config) -> str:
-    """mDNS service name: explicit config, else URI host, else default."""
-    if config.zeroconf_name:
-        return config.zeroconf_name
+    """mDNS service name: URI host if set, else default."""
     host, _ = config.parse_tcp_uri()
-    return host if host and host != "0.0.0.0" else DEFAULT_SERVICE_NAME
+    return host if host and host != "0.0.0.0" else ASR_SERVICE_NAME
 
 
 async def _register_zeroconf(server: AsyncTcpServer, config: Config) -> None:

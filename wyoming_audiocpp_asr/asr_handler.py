@@ -134,7 +134,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
 
         language = self._language
         if not language or language == _AUTO_LANGUAGE:
-            language = self.config.language
+            language = self.config.asr_language
 
         # Compute audio duration for the speed ratio.
         audio_duration = 0.0
@@ -152,7 +152,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
                     audiocpp_client.transcribe,
                     self.config.transcription_endpoint,
                     wav_bytes,
-                    self.config.model,
+                    self.config.asr_model,
                     language,
                 )
         except Exception as exc:  # noqa: BLE001 -- relay to the Wyoming client
@@ -199,12 +199,12 @@ def build_asr_info(config: "Config"):
         supports_transcript_streaming=False,
         models=[
             AsrModel(
-                name=config.model,
-                description=f"audio.cpp: {config.model}",
+                name=config.asr_model,
+                description=f"audio.cpp: {config.asr_model}",
                 installed=True,
                 attribution=attribution,
                 version=__version__,
-                languages=[config.language or "auto"],
+                languages=[config.asr_language or "auto"],
             )
         ],
     )

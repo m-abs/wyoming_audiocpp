@@ -6,7 +6,7 @@
             "configurations": [
                 "Wyoming ASR",
                 "Wyoming TTS",
-                "Playground (Next.js)"
+                "Demo (Next.js)"
             ]
         }
     ],
@@ -19,13 +19,15 @@
             "args": [
                 "--uri",
                 "tcp://0.0.0.0:55001",
-                "--web-server",
-                "--web-server-host",
+                "--asr-web-server",
+                "--asr-web-server-host",
                 "0.0.0.0",
-                "--web-server-port",
+                "--asr-web-server-port",
                 "5000",
                 "--audiocpp-uri",
-                "http://audio.cpp:8080"
+                "http://audio.cpp:8080",
+                "--config",
+                "config.example.json"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",
@@ -40,25 +42,23 @@
             "args": [
                 "--uri",
                 "tcp://0.0.0.0:10200",
-                "--web-server",
-                "--web-server-host",
+                "--tts-web-server",
+                "--tts-web-server-host",
                 "0.0.0.0",
-                "--web-server-port",
+                "--tts-web-server-port",
                 "5001",
-                "--tts-voice0-model",
-                "omnivoice",
-                "--tts-voice0-name",
-                "female",
-                "--tts-voice0-language",
-                "da",
-                "--tts-voice0-speed",
-                "1.0",
                 "--audiocpp-uri",
-                "http://audio.cpp:8080"
-            ]
+                "http://audio.cpp:8080",
+                "--config",
+                "config.example.json"
+            ],
+            "cwd": "/workspaces",
+            "console": "integratedTerminal",
+            "python": "/workspaces/.venv/bin/python",
+            "justMyCode": true
         },
         {
-            "name": "Playground (Next.js)",
+            "name": "Demo (Next.js)",
             "type": "node",
             "request": "launch",
             "program": "/workspaces/wyoming_audiocpp_demo/node_modules/.bin/next",

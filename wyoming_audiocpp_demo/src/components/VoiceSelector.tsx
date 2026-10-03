@@ -1,68 +1,34 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import type { VoiceConfig } from "../lib/api";
+import { useEffect, useState, useCallback } from "react";
+import { api } from "../lib/api";
 import type { Overrides } from "../lib/config";
 
-export async function loadModels(ttsBase: string): Promise<string[]> {
-  const info = await (await fetch(`${ttsBase}/api/info`)).json();
-  const asr = (info?.asr ?? []).map((m: { name?: string }) => m.name);
-  // Ensure the TTS default (omnivoice) is offered even if ASR filters it out.
-  if (!asr.includes("omnivoice")) {
-    asr.push("omnivoice");
-  }
-  return asr;
-}
-
 export function VoiceSelector({
-  models,
-  overrides,
   ttsBase,
+  overrides,
   onChange,
 }: {
-  models: string[];
-  overrides: Overrides;
   ttsBase: string;
+  overrides: Overrides;
   onChange: (o: Overrides) => void;
 }) {
   const [text, setText] = useState("");
-  const [model, setModel] = useState("omnivoice");
-  const [voice, setVoice] = useState("");
-  const [language, setLanguage] = useState("");
-  const [speed, setSpeed] = useState("");
-  const [instruct, setInstruct] = useState("");
+  const [voiceName, setVoiceName] = useState("");
+  const [voices, setVoices] = useState<{ name: string; model: string }[]>([]);
+  const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState("");
 
-  const [modelSet, voiceSet, languageSet, speedSet, instructSet] = useMemo(
-    () => [Boolean(model), Boolean(voice), Boolean(language), Boolean(speed), Boolean(instruct)],
-    [model, voice, language, speed, instruct],
-  );
-
-const voiceConfig = useMemo<VoiceConfig | undefined>(
-  () =>
-    modelSet || voiceSet || languageSet || speedSet || instructSet
-      ? {
-          ...(modelSet ? { model } : {}),
-          ...(voiceSet ? { name: voice } : {}),
-          ...(languageSet ? { language } : {}),
-          ...(speedSet ? { speed: Number(speed) } : {}),
-          ...(instructSet ? { instruct } : {}),
-        }
-      : undefined,
-  [
-    model,
-    voice,
-    language,
-    speed,
-    instruct,
-    modelSet,
-    voiceSet,
-    languageSet,
-    speedSet,
-    instructSet,
-  ]
-)
+  useEffect(() => {
+    api.getVoices()
+      .then((v) => {
+        setVoices(v);
+        if (v.length > 0) setVoiceName(v[0].name);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const play = useCallback(async () => {
     if (!text.trim()) {
@@ -72,12 +38,7 @@ const voiceConfig = useMemo<VoiceConfig | undefined>(
     setError("");
     setPlaying(true);
     try {
-      const res = await fetch(`${ttsBase}/api/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voice: voiceConfig }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await api.textToSpeech(text, voiceName || undefined);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
@@ -88,7 +49,7 @@ const voiceConfig = useMemo<VoiceConfig | undefined>(
     } finally {
       setPlaying(false);
     }
-  }, [text, voiceConfig, ttsBase]);
+  }, [text, voiceName]);
 
   return (
     <section className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -101,64 +62,28 @@ const voiceConfig = useMemo<VoiceConfig | undefined>(
         placeholder="Type something to synthesize…"
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Model</span>
-          <select
-            className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-          >
-            {models.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Voice</span>
-          <input
-            className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
-            value={voice}
-            onChange={(e) => setVoice(e.target.value)}
-            placeholder="optional"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Language</span>
-          <input
-            className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            placeholder="optional"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Speed</span>
-          <input
-            className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
-            value={speed}
-            onChange={(e) => setSpeed(e.target.value)}
-            placeholder="optional"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="text-zinc-500">Instruct</span>
-          <input
-            className="w-full rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
-            value={instruct}
-            onChange={(e) => setInstruct(e.target.value)}
-            placeholder="optional"
-          />
-        </label>
-      </div>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-zinc-500">Voice</span>
+        <select
+          className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
+          value={voiceName}
+          onChange={(e) => setVoiceName(e.target.value)}
+          disabled={loading || voices.length === 0}
+        >
+          {voices.map((v) => (
+            <option key={v.name} value={v.name}>
+              {v.name} ({v.model})
+            </option>
+          ))}
+          {loading && <option>Loading…</option>}
+        </select>
+      </label>
 
       <div className="flex flex-wrap items-center gap-3">
         <button
           className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           onClick={play}
-          disabled={playing}
+          disabled={playing || loading}
         >
           {playing ? "Playing…" : "Play"}
         </button>
@@ -177,31 +102,5 @@ function OverridesPanel({
   overrides: Overrides;
   onChange: (o: Overrides) => void;
 }) {
-  return (
-    <fieldset className="flex flex-col gap-2 rounded border border-dashed border-zinc-300 p-3 text-sm dark:border-zinc-700">
-      <legend className="text-xs text-zinc-500">Endpoint overrides</legend>
-      <label className="flex flex-col gap-0.5">
-        <span className="text-zinc-500">TTS base</span>
-        <input
-          className="rounded border border-zinc-300 p-1 dark:border-zinc-700"
-          value={overrides.ttsBase}
-          onChange={(e) => onChange({ ...overrides, ttsBase: e.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-0.5">
-        <span className="text-zinc-500">ASR base</span>
-        <input
-          className="rounded border border-zinc-300 p-1 dark:border-zinc-700"
-          value={overrides.asrBase}
-          onChange={(e) => onChange({ ...overrides, asrBase: e.target.value })}
-        />
-      </label>
-      <button
-        className="self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        onClick={() => onChange({ ttsBase: "http://localhost:11201", asrBase: "http://localhost:11301" })}
-      >
-        Reset
-      </button>
-    </fieldset>
-  );
+  return null;
 }

@@ -16,7 +16,7 @@ from . import synth_wav  # noqa: E402
 
 @pytest.fixture
 def client():
-    config = Config.from_args(None, model=MODEL)
+    config = Config.from_args(None, asr_model=MODEL)
     return make_asr_web_server(config).test_client()
 
 

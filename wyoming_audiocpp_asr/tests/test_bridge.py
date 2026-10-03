@@ -28,7 +28,7 @@ def post_wav(client, body, **params):
 
 
 def test_success_passes_args_and_shapes_response():
-    config = Config.from_args(None, model=MODEL, language=LANGUAGE)
+    config = Config.from_args(None, asr_model=MODEL, asr_language=LANGUAGE)
     client = build_client(config)
 
     captured = {}
@@ -57,7 +57,7 @@ def test_success_passes_args_and_shapes_response():
 
 
 def test_model_defaults_to_config():
-    config = Config.from_args(None, model=MODEL)
+    config = Config.from_args(None, asr_model=MODEL)
     client = build_client(config)
 
     captured = {}
@@ -77,7 +77,7 @@ def test_model_defaults_to_config():
 
 
 def test_language_query_overrides_config():
-    config = Config.from_args(None, model=MODEL, language=LANGUAGE)
+    config = Config.from_args(None, asr_model=MODEL, asr_language=LANGUAGE)
     client = build_client(config)
 
     captured = {}
@@ -96,14 +96,14 @@ def test_language_query_overrides_config():
 
 
 def test_empty_request_rejected():
-    config = Config.from_args(None, model=MODEL)
+    config = Config.from_args(None, asr_model=MODEL)
     client = build_client(config)
     response = client.post("/api/speech-to-text", content_type="audio/wav")
     assert response.status_code == 400
 
 
 def test_audiocpp_error_returns_502():
-    config = Config.from_args(None, model=MODEL)
+    config = Config.from_args(None, asr_model=MODEL)
     client = build_client(config)
 
     def boom(*args, **kwargs):
@@ -117,7 +117,7 @@ def test_audiocpp_error_returns_502():
 
 
 def test_info_requires_models():
-    config = Config.from_args(None, model=MODEL)
+    config = Config.from_args(None, asr_model=MODEL)
     client = build_client(config)
 
     response = client.get("/api/info")

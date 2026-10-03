@@ -78,10 +78,10 @@ class Config:
     The Wyoming service talks to ``<audiocpp_uri>/v1/audio/transcriptions``.
     """
 
-    model: str = DEFAULT_MODEL
+    asr_model: str = DEFAULT_MODEL
     """audio.cpp model id used for transcription. Defaults to ``hviske``."""
 
-    language: Optional[str] = DEFAULT_LANGUAGE
+    asr_language: Optional[str] = DEFAULT_LANGUAGE
     """Language hint passed to audio.cpp. ``None`` disables it."""
 
     uri: str = DEFAULT_URI
@@ -90,20 +90,17 @@ class Config:
     enable_zeroconf: bool = False
     """Whether to register mDNS ``_wyoming._tcp.local.`` discovery."""
 
-    zeroconf_name: Optional[str] = None
-    """mDNS service name (defaults to the URI host, else ``wyoming-audiocpp-asr``)."""
-
-    web_server: bool = False
+    asr_web_server: bool = False
     """Whether to also start the demo browser web server (requires the
     ``web`` optional dependencies)."""
 
-    web_server_host: str = DEFAULT_WEB_SERVER_HOST
+    asr_web_server_host: str = DEFAULT_WEB_SERVER_HOST
     """Interface for the demo web server."""
 
-    web_server_port: int = DEFAULT_WEB_SERVER_PORT
+    asr_web_server_port: int = DEFAULT_WEB_SERVER_PORT
     """Port for the demo web server."""
 
-    web_server_allow: Optional[List[str]] = None
+    asr_web_server_allow: Optional[List[str]] = None
     """Optional allow-list of IP addresses/CIDRs for the demo web server.
     When set, the demo web server binds all interfaces and serves only these
     peer addresses (the UI has no authentication)."""
@@ -131,15 +128,14 @@ class Config:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "audiocpp_uri": self.audiocpp_uri,
-            "model": self.model,
-            "language": self.language,
+            "asr_model": self.asr_model,
+            "asr_language": self.asr_language,
             "uri": self.uri,
             "enable_zeroconf": self.enable_zeroconf,
-            "zeroconf_name": self.zeroconf_name,
-            "web_server": self.web_server,
-            "web_server_host": self.web_server_host,
-            "web_server_port": self.web_server_port,
-            "web_server_allow": self.web_server_allow,
+            "asr_web_server": self.asr_web_server,
+            "asr_web_server_host": self.asr_web_server_host,
+            "asr_web_server_port": self.asr_web_server_port,
+            "asr_web_server_allow": self.asr_web_server_allow,
         }
 
     @classmethod
@@ -179,8 +175,8 @@ class Config:
     def validate(self) -> None:
         if not self.audiocpp_uri:
             raise ValueError("audiocpp_uri must be set")
-        if not self.model:
-            raise ValueError("model must be set")
+        if not self.asr_model:
+            raise ValueError("asr_model must be set")
 
         scheme, _, rest = self.audiocpp_uri.partition("://")
         if scheme not in ("http", "https"):
@@ -190,10 +186,10 @@ class Config:
 
         self.parse_tcp_uri()
 
-        if self.web_server and not self.web_server_port > 0:
+        if self.asr_web_server and not self.asr_web_server_port > 0:
             raise ValueError(
-                f"web_server_port must be > 0 when web_server is enabled: "
-                f"{self.web_server_port}"
+                f"asr_web_server_port must be > 0 when asr_web_server is enabled: "
+                f"{self.asr_web_server_port}"
             )
 
     @classmethod

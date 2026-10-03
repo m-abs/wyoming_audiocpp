@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import type { Overrides } from "../lib/config";
+import { defaults, type Overrides } from "../lib/config";
 
 export function AsrUpload({
   overrides,
@@ -151,7 +151,7 @@ function OverridesPanel({
       </label>
       <button
         className="self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        onClick={() => onChange({ ttsBase: "http://localhost:11201", asrBase: "http://localhost:11301" })}
+        onClick={() => onChange(defaults)}
       >
         Reset
       </button>

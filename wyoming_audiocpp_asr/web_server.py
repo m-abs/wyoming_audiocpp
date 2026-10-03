@@ -99,16 +99,16 @@ def make_asr_web_server(config: Config) -> Flask:
         return jsonify(
             {
                 "service": "wyoming-audiocpp-asr",
-                "model": config.model,
-                "language": config.language,
+                "model": config.asr_model,
+                "language": config.asr_language,
             }
         )
 
     # Applied last so a rejected peer never reaches routing. The UI has no
     # authentication of its own.
-    if config.web_server_allow:
+    if config.asr_web_server_allow:
         app.wsgi_app = AllowListMiddleware(
-            app.wsgi_app, parse_allow_list(config.web_server_allow)
+            app.wsgi_app, parse_allow_list(config.asr_web_server_allow)
         )
 
     return app

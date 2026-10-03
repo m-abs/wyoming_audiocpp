@@ -16,8 +16,8 @@ from wyoming_audiocpp_asr.config import (
 def test_defaults():
     config = Config()
     assert config.audiocpp_uri == DEFAULT_AUDIOCPP_URI
-    assert config.model == DEFAULT_MODEL
-    assert config.language == DEFAULT_LANGUAGE
+    assert config.asr_model == DEFAULT_MODEL
+    assert config.asr_language == DEFAULT_LANGUAGE
     assert config.transcription_endpoint.endswith("/v1/audio/transcriptions")
 
 
@@ -28,11 +28,11 @@ def test_transcription_endpoint_strips_trailing_slash():
 
 def test_from_dict_overrides():
     config = Config.from_dict(
-        {"audiocpp_uri": "http://10.0.0.1:8080", "model": "hviske", "language": "en"}
+        {"audiocpp_uri": "http://10.0.0.1:8080", "asr_model": "hviske", "asr_language": "en"}
     )
     assert config.audiocpp_uri == "http://10.0.0.1:8080"
-    assert config.model == "hviske"
-    assert config.language == "en"
+    assert config.asr_model == "hviske"
+    assert config.asr_language == "en"
 
 
 def test_from_args_loads_config_file():
@@ -40,12 +40,12 @@ def test_from_args_loads_config_file():
     import json
 
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
-        json.dump({"audiocpp_uri": "http://example:8080", "model": "hviske"}, tmp)
+        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske"}, tmp)
         path = tmp.name
 
     config = Config.from_args(path)
     assert config.audiocpp_uri == "http://example:8080"
-    assert config.model == "hviske"
+    assert config.asr_model == "hviske"
 
 
 def test_from_args_cli_overrides_config_file():
@@ -53,29 +53,29 @@ def test_from_args_cli_overrides_config_file():
     import json
 
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
-        json.dump({"audiocpp_uri": "http://example:8080", "model": "hviske"}, tmp)
+        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske"}, tmp)
         path = tmp.name
 
-    config = Config.from_args(path, model="qwen3_asr", language="da")
-    assert config.model == "qwen3_asr"
-    assert config.language == "da"
+    config = Config.from_args(path, asr_model="qwen3_asr", asr_language="da")
+    assert config.asr_model == "qwen3_asr"
+    assert config.asr_language == "da"
     assert config.audiocpp_uri == "http://example:8080"
 
 
 def test_from_args_missing_config_uses_defaults():
-    config = Config.from_args("/nonexistent/config.json", model="hviske")
+    config = Config.from_args("/nonexistent/config.json", asr_model="hviske")
     assert config.audiocpp_uri == DEFAULT_AUDIOCPP_URI
-    assert config.model == "hviske"
+    assert config.asr_model == "hviske"
 
 
 def test_validate_rejects_bad_scheme():
-    config = Config(audiocpp_uri="localhost:8080", model="hviske")
+    config = Config(audiocpp_uri="localhost:8080", asr_model="hviske")
     with pytest.raises(ValueError):
         config.validate()
 
 
 def test_validate_rejects_empty_model():
-    config = Config(audiocpp_uri="http://localhost:8080", model="")
+    config = Config(audiocpp_uri="http://localhost:8080", asr_model="")
     with pytest.raises(ValueError):
         config.validate()
 
@@ -84,11 +84,10 @@ def test_new_defaults():
     config = Config()
     assert config.uri == DEFAULT_URI
     assert config.enable_zeroconf is False
-    assert config.zeroconf_name is None
-    assert config.web_server is False
-    assert config.web_server_host == DEFAULT_WEB_SERVER_HOST
-    assert config.web_server_port == DEFAULT_WEB_SERVER_PORT
-    assert config.web_server_allow is None
+    assert config.asr_web_server is False
+    assert config.asr_web_server_host == DEFAULT_WEB_SERVER_HOST
+    assert config.asr_web_server_port == DEFAULT_WEB_SERVER_PORT
+    assert config.asr_web_server_allow is None
 
 
 def test_parse_tcp_uri():
@@ -100,13 +99,13 @@ def test_parse_tcp_uri():
 
 
 def test_validate_rejects_non_tcp_uri():
-    config = Config(uri="stdio://", model="hviske")
+    config = Config(uri="stdio://", asr_model="hviske")
     with pytest.raises(ValueError):
         config.validate()
 
 
 def test_validate_rejects_bad_web_server_port():
-    config = Config(model="hviske", web_server=True, web_server_port=0)
+    config = Config(asr_model="hviske", asr_web_server=True, asr_web_server_port=0)
     with pytest.raises(ValueError):
         config.validate()
 
@@ -116,41 +115,39 @@ def test_from_dict_new_fields():
         {
             "uri": "tcp://10.0.0.1:55002",
             "enable_zeroconf": True,
-            "zeroconf_name": "asr",
-            "web_server": True,
-            "web_server_host": "0.0.0.0",
-            "web_server_port": 5001,
-            "web_server_allow": ["10.0.0.0/8"],
+            "asr_web_server": True,
+            "asr_web_server_host": "0.0.0.0",
+            "asr_web_server_port": 5001,
+            "asr_web_server_allow": ["10.0.0.0/8"],
         }
     )
     assert config.uri == "tcp://10.0.0.1:55002"
     assert config.enable_zeroconf is True
-    assert config.zeroconf_name == "asr"
-    assert config.web_server is True
-    assert config.web_server_host == "0.0.0.0"
-    assert config.web_server_port == 5001
-    assert config.web_server_allow == ["10.0.0.0/8"]
+    assert config.asr_web_server is True
+    assert config.asr_web_server_host == "0.0.0.0"
+    assert config.asr_web_server_port == 5001
+    assert config.asr_web_server_allow == ["10.0.0.0/8"]
 
 
 def test_from_args_cli_overrides_new_fields():
     config = Config.from_args(
-        None, uri="tcp://127.0.0.1:55009", enable_zeroconf=True, web_server=True
+        None, uri="tcp://127.0.0.1:55009", enable_zeroconf=True, asr_web_server=True
     )
     assert config.uri == "tcp://127.0.0.1:55009"
     assert config.enable_zeroconf is True
-    assert config.web_server is True
+    assert config.asr_web_server is True
 
 
 def test_from_args_env_var_applied(monkeypatch):
     monkeypatch.setenv("WYO_URI", "tcp://127.0.0.1:55007")
     monkeypatch.setenv("WYO_ENABLE_ZEROCONF", "true")
-    monkeypatch.setenv("WYO_WEB_SERVER_PORT", "5002")
-    monkeypatch.setenv("WYO_WEB_SERVER_ALLOW", "10.0.0.1,192.168.1.0/24")
+    monkeypatch.setenv("WYO_ASR_WEB_SERVER_PORT", "5002")
+    monkeypatch.setenv("WYO_ASR_WEB_SERVER_ALLOW", "10.0.0.1,192.168.1.0/24")
     config = Config.from_args(None)
     assert config.uri == "tcp://127.0.0.1:55007"
     assert config.enable_zeroconf is True
-    assert config.web_server_port == 5002
-    assert config.web_server_allow == ["10.0.0.1", "192.168.1.0/24"]
+    assert config.asr_web_server_port == 5002
+    assert config.asr_web_server_allow == ["10.0.0.1", "192.168.1.0/24"]
 
 
 def test_from_args_cli_beats_env(monkeypatch):

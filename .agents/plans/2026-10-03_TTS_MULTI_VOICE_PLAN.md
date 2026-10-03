@@ -210,8 +210,8 @@ Goal: one example `config.json` that both bridges read without change, wired int
   "asr_model": "hviske",
   "asr_language": "da",
   "tts_voices": [
-    { "name": "default", "model": "omnivoice" },
-    { "name": "female", "model": "omnivoice", "options": { "instruct": "female voice" } }
+    { "name": "Manly man", "model": "omnivoice", "options": { "instruct": "male, low pitch, middle-aged" } },
+    { "name": "female", "model": "omnivoice", "options": { "instruct": "female, high pitch, young adult" } }
   ]
 }
 ```
@@ -229,6 +229,50 @@ Goal: one example `config.json` that both bridges read without change, wired int
 **`wyoming_audiocpp_demo/run_mock_bridges.sh`:**
 - TTS lines: replace `--host 127.0.0.1 --port <p> --tts-voice0-*` with `--uri tcp://127.0.0.1:<p> --config config.example.json`. Keep `--audiocpp-uri`.
 - ASR line: replace `--model hviske` with `--config config.example.json`. Keep `--uri`, `--web-server`, `--audiocpp-uri`.
+### Step 10 — Separate web server settings + zeroconf_name removal + service name constants
+
+**`wyoming_audiocpp_asr/config.py`:**
+- Rename `web_server` → `asr_web_server`, `web_server_host` → `asr_web_server_host`, `web_server_port` → `asr_web_server_port`, `web_server_allow` → `asr_web_server_allow`.
+- Remove `zeroconf_name` field (and its docstring).
+- `to_dict()`: keys follow the new names.
+- `validate()`: check `asr_web_server_port > 0` when `asr_web_server` is enabled.
+
+**`wyoming_audiocpp_tts/config.py`:**
+- Rename `web_server` → `tts_web_server`, `web_server_host` → `tts_web_server_host`, `web_server_port` → `tts_web_server_port`, `web_server_allow` → `tts_web_server_allow`.
+- Remove `zeroconf_name` field (and its docstring).
+- `to_dict()`: keys follow the new names.
+- `validate()`: check `tts_web_server_port > 0` when `tts_web_server` is enabled.
+
+**`wyoming_audiocpp_asr/__main__.py`:**
+- CLI flags: `--web-server` → `--asr-web-server`, `--web-server-host` → `--asr-web-server-host`, `--web-server-port` → `--asr-web-server-port`, `--web-server-allow` → `--asr-web-server-allow`.
+- Remove `--zeroconf-name` flag (if present).
+- `Config.from_args(...)`: pass `asr_web_server=...`, etc.
+
+**`wyoming_audiocpp_tts/__main__.py`:**
+- CLI flags: `--web-server` → `--tts-web-server`, `--web-server-host` → `--tts-web-server-host`, `--web-server-port` → `--tts-web-server-port`, `--web-server-allow` → `--tts-web-server-allow`.
+- Remove `--zeroconf-name` flag (if present).
+- `Config.from_args(...)`: pass `tts_web_server=...`, etc.
+
+**Service name constants:**
+- `wyoming_audiocpp_asr/server.py`: `DEFAULT_SERVICE_NAME` → `ASR_SERVICE_NAME`.
+- `wyoming_audiocpp_tts/server.py`: `SERVICE_NAME` → `TTS_SERVICE_NAME`.
+- `wyoming_audiocpp_tts/tts_server.py`: `SERVICE_NAME` → `TTS_SERVICE_NAME`.
+- `wyoming_audiocpp_tts/web_server.py`: `SERVICE_NAME` → `TTS_SERVICE_NAME`.
+
+**Zeroconf registration (both `server.py`):**
+- ASR: the `zeroconf_name()` helper is simplified — it no longer reads `config.zeroconf_name`; it returns the URI host if set, else `ASR_SERVICE_NAME`.
+- TTS: `HomeAssistantZeroconf(name=...)` uses `TTS_SERVICE_NAME` directly (no config lookup).
+
+**`config.example.json`:**
+- Replace `web_server`/`web_server_host`/`web_server_port`/`web_server_allow` with the prefixed `asr_web_server*` and `tts_web_server*` keys.
+- Remove `zeroconf_name`.
+
+**`.vscode/launch.json`:**
+- ASR launcher: `--web-server` → `--asr-web-server`, `--web-server-host` → `--asr-web-server-host`, `--web-server-port` → `--asr-web-server-port`.
+- TTS launcher: `--web-server` → `--tts-web-server`, `--web-server-host` → `--tts-web-server-host`, `--web-server-port` → `--tts-web-server-port`.
+
+**Tests:** update all references to the renamed fields and constants.
+
 
 ## Critical files & anchors
 
