@@ -10,9 +10,11 @@ OpenAI-compatible HTTP endpoints, plus a Next.js 16 browser playground:
 - `wyoming_audiocpp_asr` — ASR bridge; default bind `tcp://0.0.0.0:55001`.
 - `wyoming_audiocpp_tts` — TTS bridge; default bind `tcp://0.0.0.0:10200`.
 
-> **Scope note:** `wyoming-faster-whisper/` and `wyoming-piper/` are vendored
-> **reference implementations only** — not project source. Do not edit them as
-> if part of this repo; read them only to understand Wyoming handler patterns.
+> **Scope note:** `references/wyoming-faster-whisper/`, `references/wyoming-piper/`
+> and `references/audio.cpp/` are **reference projects only** — not project source.
+> Do not edit them as if part of this repo; read them to understand Wyoming handler
+> patterns and the audio.cpp HTTP API. They are checked out / updated by
+> `scripts/fetch_references.sh` (see Reference Projects below).
 
 ## Architecture & Data Flow
 
@@ -59,7 +61,29 @@ bytes). TTS uses the `wyoming` package's server directly (no local wire module).
 | `tests/` | Root e2e suite (`test_e2e_bridges.py`) |
 | `test_data/` | CC0 sample WAVs + transcript labels (deliberately non-canonical) |
 | `.devcontainer/` | Dev container: Python 3.14 app + audio.cpp GPU service |
-| `wyoming-faster-whisper/`, `wyoming-piper/` | Reference impls (vendored, not project source) |
+| `references/` | Development reference projects (not project source): `wyoming-piper/` (TTS), `wyoming-faster-whisper/` (ASR), `audio.cpp/` (model HTTP service) |
+
+## Reference Projects
+
+Three read-only reference projects live under `references/` and back the bridges.
+They are **not** project source — never edit them as if part of this repo.
+
+| Path | Role | Upstream |
+| --- | --- | --- |
+| `references/wyoming-piper/` | TTS reference implementation | `github.com/OHF-Voice/wyoming-piper` |
+| `references/wyoming-faster-whisper/` | ASR reference implementation | `github.com/OHF-Voice/wyoming-faster-whisper` |
+| `references/audio.cpp/` | audio model HTTP service (C++; OpenAI-compatible API) | `github.com/0xShug0/audio.cpp` |
+
+**Checkout / update:** run `scripts/fetch_references.sh` from the repo root. It
+clones any missing project and syncs existing ones to the upstream tip of `main`
+(including audio.cpp's submodule). Idempotent — safe to re-run:
+
+```bash
+scripts/fetch_references.sh              # clone missing, update existing
+scripts/fetch_references.sh --branch main  # pin a branch (default: main)
+```
+
+They are gitignored (see `.gitignore`), so they are not tracked by this repo.
 
 ## Development Commands
 
