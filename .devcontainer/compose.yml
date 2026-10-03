@@ -23,8 +23,8 @@ services:
       - host
       - audiocpp
     ports:
-      - "0.0.0.0:55001:55001"   # ASR (Wyoming)
-      - "0.0.0.0:10200:10200"   # TTS (Wyoming)
+      - "0.0.0.0:11301:11301"   # ASR (Wyoming)
+      - "0.0.0.0:11201:11201"   # TTS (Wyoming)
 
     working_dir: /workspaces
 

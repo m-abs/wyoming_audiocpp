@@ -67,7 +67,7 @@ async def _run(server: AsyncTcpServer, config: Config) -> None:
 
 def create_tcp_server(config: Config) -> None:
     """Run the Wyoming TCP server (blocking; starts the asyncio loop)."""
-    server = AsyncServer.from_uri(config.uri)
+    server = AsyncServer.from_uri(config.asr_uri)
     if config.enable_zeroconf and not isinstance(server, AsyncTcpServer):
         raise ValueError("Zeroconf requires tcp:// uri")
     asyncio.run(_run(server, config))

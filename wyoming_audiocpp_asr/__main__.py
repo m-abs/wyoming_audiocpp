@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to config.json (default: config.json)",
     )
     parser.add_argument(
-        "--uri",
+        "--asr-uri",
         default=DEFAULT_URI,
         help="Wyoming TCP bind uri, tcp://host:port (default: %(default)s)",
     )
@@ -99,7 +99,7 @@ def main(argv=None) -> None:
 
     config = Config.from_args(
         args.config,
-        uri=args.uri,
+        asr_uri=args.asr_uri,
         audiocpp_uri=args.audiocpp_uri,
         enable_zeroconf=args.zeroconf,
         asr_web_server=args.asr_web_server,

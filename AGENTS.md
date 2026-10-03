@@ -7,8 +7,8 @@ Monorepo of **Wyoming protocol** bridges (Home Assistant voice assistant) to
 distributions each translate the Wyoming event protocol into audio.cpp's
 OpenAI-compatible HTTP endpoints, plus a Next.js 16 browser playground:
 
-- `wyoming_audiocpp_asr` — ASR bridge; default bind `tcp://0.0.0.0:55001`.
-- `wyoming_audiocpp_tts` — TTS bridge; default bind `tcp://0.0.0.0:10200`.
+- `wyoming_audiocpp_asr` — ASR bridge; default bind `tcp://0.0.0.0:11301`.
+- `wyoming_audiocpp_tts` — TTS bridge; default bind `tcp://0.0.0.0:11201`.
 
 > **Scope note:** `references/wyoming-faster-whisper/`, `references/wyoming-piper/`
 > and `references/audio.cpp/` are **reference projects only** — not project source.
@@ -96,9 +96,9 @@ pip install -e .                        # ASR -> console script wyoming-audiocpp
 cd wyoming_audiocpp_tts && pip install -e .   # TTS -> wyoming-audiocpp-tts; extras [dev] [web] (no zeroconf)
 
 # Run the bridges (Wyoming TCP services)
-.venv/bin/python -m wyoming_audiocpp_asr --uri tcp://0.0.0.0:55001 \
+.venv/bin/python -m wyoming_audiocpp_asr --asr-uri tcp://0.0.0.0:11301 \
     --audiocpp-uri http://audio.cpp:8080 --model hviske --language da [--zeroconf] [--web-server]
-.venv/bin/python -m wyoming_audiocpp_tts --uri tcp://0.0.0.0:10200 \
+.venv/bin/python -m wyoming_audiocpp_tts --tts-uri tcp://0.0.0.0:11201 \
     --tts-voice0-model omnivoice [--tts-voice0-extra-seed 42] [--zeroconf] [--web-server]
 
 # Tests (pytest, asyncio_mode=auto)
