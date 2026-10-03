@@ -3,17 +3,8 @@ import { config } from "./config";
 // Wyoming bridge base paths. The Flask bridges live at the app root, so these
 // are relative to the Next.js frontend origin.
 const TTS_PATH = "/api/tts";
+const VOICES_PATH = "/api/voices";
 const ASR_PATH = "/api/speech-to-text";
-
-// audio.cpp VoiceConfig shape. Mirrors the fields the TTS UI sends.
-export type VoiceConfig = {
-  model?: string; // audio.cpp model id (required upstream)
-  name?: string; // audio.cpp `voice`
-  language?: string;
-  speed?: number;
-  instruct?: string;
-  extra?: Record<string, unknown>;
-};
 
 const getOrigin = (base: string) => {
   try {
@@ -23,16 +14,14 @@ const getOrigin = (base: string) => {
   }
 };
 
-// TTS: POST JSON {text}. Field is `text` (Wyoming), NOT audio.cpp's `input`.
-// The optional `voice` field is a JSON-serialized audio.cpp VoiceConfig.
-// NOTE: the real Flask bridge only reads `body.get("text")`; `voice` is passed
-// straight through to audio.cpp.
+// TTS: POST JSON {text, voice?}. `voice` is a voice-name string selected
+// server-side from the configured voices.
 async function textToSpeech(
   text: string,
-  voiceConfig?: VoiceConfig,
+  voiceName?: string,
 ): Promise<Response> {
   const o = getOrigin(config.ttsBase);
-  const body = voiceConfig ? { text, voice: JSON.stringify(voiceConfig) } : { text };
+  const body = voiceName ? { text, voice: voiceName } : { text };
   const res = await fetch(`${o}${TTS_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -40,6 +29,15 @@ async function textToSpeech(
   });
   if (!res.ok) throw new Error(`TTS: ${res.statusText}`);
   return res;
+}
+
+// Voices: GET /api/voices → { voices: [{name, model}] }.
+async function getVoices(): Promise<{ name: string; model: string }[]> {
+  const o = getOrigin(config.ttsBase);
+  const res = await fetch(`${o}${VOICES_PATH}`);
+  if (!res.ok) throw new Error(`Voices: ${res.statusText}`);
+  const data = await res.json();
+  return data.voices;
 }
 
 // ASR: POST WAV (multipart field `file`, filename audio.wav, type audio/wav) → { text, language }.
@@ -65,5 +63,6 @@ async function speechToText(
 
 export const api = {
   textToSpeech,
+  getVoices,
   speechToText,
 };

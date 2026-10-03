@@ -21,7 +21,7 @@ from wyoming.server import AsyncServer, AsyncTcpServer
 
 logger = logging.getLogger("wyoming_audiocpp_tts")
 
-SERVICE_NAME = "wyoming-audiocpp-tts"
+TTS_SERVICE_NAME = "wyoming-audiocpp-tts"
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ async def _run(server: AsyncTcpServer, config: "Config") -> None:
         from wyoming.zeroconf import HomeAssistantZeroconf
 
         hass_zeroconf = HomeAssistantZeroconf(
-            name=config.zeroconf_name or SERVICE_NAME,
+            name=TTS_SERVICE_NAME,
             port=server.port,
             host=server.host,
         )

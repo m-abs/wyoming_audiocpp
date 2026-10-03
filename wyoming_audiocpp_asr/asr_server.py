@@ -30,9 +30,20 @@ logger = logging.getLogger("wyoming_audiocpp_asr")
 def create_app(config: Config) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_asr")
+    @app.before_request
+    def cors_preflight():
+        if request.method == "OPTIONS":
+            resp = Response(status=200)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            return resp
+
     @app.after_request
     def cors(resp):
         resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
         return resp
 
     @app.route("/api/info", methods=["GET"])
@@ -55,7 +66,7 @@ def create_app(config: Config) -> Flask:
             return Response("empty request", status=400)
 
         language = request.args.get("language")
-        model = request.args.get("model") or config.model
+        model = request.args.get("model") or config.asr_model
         endpoint = config.transcription_endpoint
 
         try:
@@ -72,8 +83,8 @@ def create_app(config: Config) -> Flask:
             {
                 "name": "wyoming_audiocpp_asr",
                 "audiocpp_uri": config.audiocpp_uri,
-                "audiocpp_model": config.model,
-                "audiocpp_language": config.language,
+                "audiocpp_model": config.asr_model,
+                "audiocpp_language": config.asr_language,
             }
         )
 

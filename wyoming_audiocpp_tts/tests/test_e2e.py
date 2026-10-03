@@ -13,7 +13,7 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
-from wyoming_audiocpp_tts.config import Config
+from wyoming_audiocpp_tts.config import Config, VoiceConfig
 from wyoming_audiocpp_tts.server import create_tcp_server
 from wyoming.event import read_event, write_event
 from wyoming.info import Describe
@@ -61,9 +61,8 @@ def _connect(config):
 
 
 def test_describe_returns_info():
-    config = Config.from_args(
-        None,
-        voice_overrides={"tts_voice0_model": "omnivoice"},
+    config = Config(
+        tts_voices=[VoiceConfig(model="omnivoice")],
         uri=SERVER_URI,
     )
 
@@ -106,4 +105,4 @@ def test_describe_returns_info():
     assert program["installed"] is True
     assert program["supports_synthesize_streaming"] is True
     assert len(program["voices"]) == 1
-    assert program["voices"][0]["name"] == "default"
+    assert program["voices"][0]["name"] == "omnivoice"

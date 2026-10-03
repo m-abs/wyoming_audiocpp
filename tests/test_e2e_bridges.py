@@ -129,16 +129,19 @@ class BridgeServer:
 
     def _start(self, audiocpp_uri: str) -> None:
         if self.kind == "tts":
-            cmd = [PY, "-m", "wyoming_audiocpp_tts", "--log-level", "WARNING"]
-            cmd += ["--tts-voice0-model", "omnivoice", "--tts-voice0-name", "TestVoice",
-                    "--tts-voice0-language", "da", "--host", "127.0.0.1",
-                    "--port", str(self.port), "--audiocpp-uri", audiocpp_uri]
+            cmd = [PY, "-m", "wyoming_audiocpp_tts"]
+            tcp_port = self.tcp_port or (self.port + 1)
+            cmd += ["--uri", f"tcp://127.0.0.1:{tcp_port}",
+                    "--tts-web-server", "--tts-web-server-host", "127.0.0.1",
+                    "--tts-web-server-port", str(self.port),
+                    "--config", os.path.join(REPO, "config.example.json"),
+                    "--audiocpp-uri", audiocpp_uri]
         else:
             cmd = [PY, "-m", "wyoming_audiocpp_asr",
-                   "--model", "hviske",
                    "--uri", f"tcp://127.0.0.1:{self.tcp_port}",
-                   "--web-server", "--web-server-host", "127.0.0.1",
-                   "--web-server-port", str(self.port),
+                   "--asr-web-server", "--asr-web-server-host", "127.0.0.1",
+                   "--asr-web-server-port", str(self.port),
+                   "--config", os.path.join(REPO, "config.example.json"),
                    "--audiocpp-uri", audiocpp_uri]
         self.process = subprocess.Popen(
             cmd, cwd=REPO, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,

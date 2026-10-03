@@ -25,13 +25,13 @@ if TYPE_CHECKING:
     from .config import Config
 
 
-SERVICE_NAME = "wyoming-audiocpp-tts"
+TTS_SERVICE_NAME = "wyoming-audiocpp-tts"
 
 logger = logging.getLogger(__name__)
 
 
 def _render_index() -> str:
-    """Return the HTML page with a text area and a Synthesize button."""
+    """Return the HTML page with a text area, voice dropdown, and a Synthesize button."""
     return (
         "<html lang=\"en\">\n"
         "<head>\n"
@@ -41,21 +41,35 @@ def _render_index() -> str:
         "    body { font-family: sans-serif; margin: 2rem; }\n"
         "    textarea { width: 100%; height: 12rem; }\n"
         "    button { padding: 0.5rem 1rem; }\n"
+        "    select { margin: 0.5rem 0; }\n"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
         "  <h1>Wyoming audio.cpp TTS</h1>\n"
         "  <textarea id=\"text\" placeholder=\"Enter text to synthesize\"></textarea>\n"
         "  <br>\n"
+        "  <label for=\"voice\">Voice:</label>\n"
+        "  <select id=\"voice\"></select>\n"
+        "  <br>\n"
         "  <button onclick=\"synthesize()\">Synthesize</button>\n"
         "  <audio id=\"player\" controls></audio>\n"
         "  <script>\n"
+        "    fetch('/api/voices').then(r => r.json()).then(data => {\n"
+        "      const select = document.getElementById('voice');\n"
+        "      data.voices.forEach(v => {\n"
+        "        const opt = document.createElement('option');\n"
+        "        opt.value = v.name;\n"
+        "        opt.textContent = v.name + ' (' + v.model + ')';\n"
+        "        select.appendChild(opt);\n"
+        "      });\n"
+        "    });\n"
         "    async function synthesize() {\n"
         "      const text = document.getElementById('text').value;\n"
+        "      const voice = document.getElementById('voice').value;\n"
         "      const resp = await fetch('/api/tts', {\n"
         "        method: 'POST',\n"
         "        headers: {'Content-Type': 'application/json'},\n"
-        "        body: JSON.stringify({text: text}),\n"
+        "        body: JSON.stringify({text: text, voice: voice}),\n"
         "      });\n"
         "      if (!resp.ok) { alert('Error: ' + resp.statusText); return; }\n"
         "      const blob = await resp.blob();\n"
@@ -85,16 +99,12 @@ def make_tts_web_server(config: "Config", flask_app: "Flask") -> "Flask":
 
     @flask_app.route("/api/status", methods=["GET"])
     def api_status() -> Response:
-        voice = config.tts_voice
         return jsonify(
             {
-                "service": SERVICE_NAME,
-                "tts_model": voice.model if voice is not None else None,
-                "tts_name": voice.name if voice is not None else None,
-                "asr_model": config.asr_model,
+                "service": TTS_SERVICE_NAME,
+                "tts_voices": [v.voice_name for v in config.tts_voices],
             }
         )
-
     return flask_app
 
 

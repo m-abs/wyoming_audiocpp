@@ -42,8 +42,7 @@ def test_text_to_speech_full_body():
         name="female",
         language="da",
         speed=1.5,
-        instruct="female",
-        extra={"seed": 42},
+        options={"instruct": "female", "num_inference_steps": "32"},
     )
     captured = {}
 
@@ -61,7 +60,7 @@ def test_text_to_speech_full_body():
         "input": "hi",
         "language": "da",
         "speed": 1.5,
-        "options": {"instruct": "female", "seed": 42},
+        "options": {"instruct": "female", "num_inference_steps": 32.0},
     }
 
 

@@ -29,7 +29,7 @@ from wyoming.info import (
 )
 from wyoming.server import AsyncEventHandler
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
-from wyoming.tts import Synthesize, SynthesizeStop, SynthesizeStopped
+from wyoming.tts import Synthesize, SynthesizeChunk, SynthesizeStart, SynthesizeStop, SynthesizeStopped
 
 if TYPE_CHECKING:
     from .config import Config
@@ -72,6 +72,12 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             await self.write_event(SynthesizeStopped().event())
             return True
 
+        if SynthesizeStart.is_type(event.type) or SynthesizeChunk.is_type(event.type):
+            # HA sends these as part of its TTS handshake; the actual synthesis
+            # uses the non-streaming Synthesize event. Acknowledge and stay.
+            _LOGGER.debug("Ignoring %s", event.type)
+            return True
+
         _LOGGER.error("Unhandled event type: %s", event.type)
 
         return True
@@ -89,33 +95,39 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
                                 installed=True,
                                 description="audio.cpp text-to-speech",
                                 version=__version__,
-                                voices=self._build_tts_info(self.config.tts_voice),
+                                voices=self._build_tts_info(self.config.tts_voices),
                                 supports_synthesize_streaming=True,
                             )
                         ]
                     )
         await self.write_event(tts_info.event())
 
-    def _build_tts_info(self, voice) -> List[TtsVoice]:
+    def _build_tts_info(self, voices: List["VoiceConfig"]) -> List[TtsVoice]:
         """Build the Wyoming TTS voices for the service info message."""
-        if voice is None:
-            return []
         return [
             TtsVoice(
-                name=voice.name or "default",
-                description=voice.name or "audio.cpp voice",
-                languages=[voice.language] if voice.language else ["en"],
+                name=v.voice_name,
+                description=f"{v.voice_name} ({v.model})",
+                languages=[v.language] if v.language else ["en"],
                 attribution=Attribution(
                     name="audio.cpp",
-                    url="https://github.com/mudam/audiocpp",
+                    url="https://github.com/0xShug0/audio.cpp",
                 ),
                 installed=True,
                 version=None,
-                speakers=[TtsVoiceSpeaker(
-                    name=voice.name or "default",
-                ),]
+                speakers=[TtsVoiceSpeaker(name=v.voice_name)],
             )
+            for v in voices
         ]
+
+    def _find_voice(self, name: Optional[str]) -> "VoiceConfig":
+        """Select a voice by name; fall back to the first voice."""
+        if name:
+            for v in self.config.tts_voices:
+                if v.voice_name == name:
+                    return v
+            _LOGGER.warning("Voice %r not found; falling back to first voice", name)
+        return self.config.tts_voices[0]
 
     def _open_wav(self, fmt: "audiocpp_client.WavFormat") -> None:
         """Open the WAV sink for the current synthesis."""
@@ -197,7 +209,9 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             None,
             lambda: audiocpp_client.synthesize(
                 self.config.tts_endpoint,
-                self.config.tts_voice,
+                self._find_voice(
+                    synthesize.voice.name if synthesize.voice else None
+                ),
                 text,
             ),
         )

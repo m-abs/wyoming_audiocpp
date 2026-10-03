@@ -22,7 +22,7 @@ _START = AudioStart(rate=16000, width=2, channels=1).event()
 
 
 def _config(**overrides) -> Config:
-    return Config.from_args(None, model=MODEL, **overrides)
+    return Config.from_args(None, asr_model=MODEL, **overrides)
 
 
 class _Writer:
@@ -205,11 +205,15 @@ async def test_handle_transcribe_error_surfaces_error_event(
 
 
 def test_build_asr_info_uses_config_language():
-    info = build_asr_info(_config(language="sv"))
+    info = build_asr_info(_config(asr_language="sv"))
     assert info.asr[0].models[0].languages == ["sv"]
 
     info = build_asr_info(_config())
     assert info.asr[0].models[0].languages == ["da"]
+
+def test_build_asr_info_uses_language_list():
+    info = build_asr_info(_config(asr_language=["da", "en"]))
+    assert info.asr[0].models[0].languages == ["da", "en"]
 
 
 async def test_disconnect_closes_open_utterance(handler, writer):

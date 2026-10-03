@@ -7,8 +7,9 @@ clients.
 
 Endpoints:
 
-* ``POST /api/tts`` -- synthesize audio from the ``text`` field.
-* ``GET /`` -- service metadata (name, models, voice).
+* ``POST /api/tts`` -- synthesize audio from the ``text`` field, optionally selecting a voice by name.
+* ``GET /api/voices`` -- list the configured voices.
+* ``GET /`` -- service metadata (name, voices).
 """
 
 from __future__ import annotations
@@ -18,23 +19,42 @@ import logging
 from flask import Flask, Response, jsonify, request
 
 from . import audiocpp_client
-from .config import Config
+from .config import Config, VoiceConfig
 
 logger = logging.getLogger("wyoming_audiocpp_tts")
 
-SERVICE_NAME = "wyoming_audiocpp_tts"
+TTS_SERVICE_NAME = "wyoming_audiocpp_tts"
+
+
+def _find_voice(voices: list[VoiceConfig], name: str | None) -> VoiceConfig:
+    """Select a voice by name; fall back to the first voice."""
+    if name:
+        for v in voices:
+            if v.voice_name == name:
+                return v
+    return voices[0]
 
 
 def create_app(config: Config) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_tts")
     app.config["TTS_ENDPOINT"] = config.tts_endpoint
-    app.config["TTS_VOICE"] = config.tts_voice
-    app.config["ASR_MODEL"] = config.asr_model
+    app.config["TTS_VOICES"] = config.tts_voices
+
+    @app.before_request
+    def cors_preflight():
+        if request.method == "OPTIONS":
+            resp = Response(status=200)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            return resp
 
     @app.after_request
     def cors(resp):
         resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
         return resp
 
     @app.route("/api/tts", methods=["POST"])
@@ -44,10 +64,12 @@ def create_app(config: Config) -> Flask:
         if not text:
             return jsonify(error="text is required"), 400
 
+        voice = _find_voice(app.config["TTS_VOICES"], body.get("voice"))
+
         try:
             audio = audiocpp_client.text_to_speech(
                 app.config["TTS_ENDPOINT"],
-                app.config["TTS_VOICE"],
+                voice,
                 text=text,
             )
         except Exception as exc:  # noqa: BLE001 - upstream failure is always 502
@@ -56,15 +78,21 @@ def create_app(config: Config) -> Flask:
 
         return Response(audio, mimetype="audio/wav")
 
+    @app.route("/api/voices", methods=["GET"])
+    def api_voices() -> Response:
+        return jsonify({
+            "voices": [
+                {"name": v.voice_name, "model": v.model}
+                for v in app.config["TTS_VOICES"]
+            ]
+        })
+
     @app.route("/", methods=["GET"])
     def index() -> Response:
-        voice = app.config["TTS_VOICE"]
         return jsonify(
             {
-                "name": SERVICE_NAME,
-                "tts_model": voice.model if voice is not None else None,
-                "tts_name": voice.name if voice is not None else None,
-                "asr_model": app.config["ASR_MODEL"],
+                "name": TTS_SERVICE_NAME,
+                "tts_voices": [v.voice_name for v in app.config["TTS_VOICES"]],
             }
         )
 
