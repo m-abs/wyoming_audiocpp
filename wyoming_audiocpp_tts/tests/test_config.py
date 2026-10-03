@@ -42,7 +42,7 @@ def test_voice_request_body_with_options():
     assert body["input"] == "hello"
     assert body["language"] == "da"
     assert body["speed"] == 1.5
-    assert body["options"]["instruct"] == "female voice"
+    assert body["options"]["instruct"] == "female"
     assert body["options"]["num_inference_steps"] == 32.0
 
 

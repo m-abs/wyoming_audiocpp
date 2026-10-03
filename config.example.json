@@ -15,20 +15,20 @@
   "tts_voices": [
     {
       "model": "omnivoice",
-      "name": "female",
+      "name": "Female voice",
       "language": "da",
       "speed": 1.0,
       "options": {
-        "instruct": "female voice"
+        "instruct": "female"
       }
     },
     {
       "model": "omnivoice",
-      "name": "male",
+      "name": "Male voice",
       "language": "da",
-      "speed": 1.0,
+      "speed": 1.1,
       "options": {
-        "instruct": "male voice"
+        "instruct": "male"
       }
     }
   ]
