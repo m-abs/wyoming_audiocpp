@@ -41,9 +41,20 @@ def create_app(config: Config) -> Flask:
     app.config["TTS_ENDPOINT"] = config.tts_endpoint
     app.config["TTS_VOICES"] = config.tts_voices
 
+    @app.before_request
+    def cors_preflight():
+        if request.method == "OPTIONS":
+            resp = Response(status=200)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            return resp
+
     @app.after_request
     def cors(resp):
         resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
         return resp
 
     @app.route("/api/tts", methods=["POST"])

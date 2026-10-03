@@ -93,7 +93,7 @@ export function AsrUpload({
 
       <div className="flex flex-wrap items-center gap-3">
         <button
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="cursor-pointer rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={submit}
           disabled={loading || !file}
         >
@@ -110,7 +110,7 @@ export function AsrUpload({
             readOnly
           />
           <button
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            className="cursor-pointer rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
             onClick={() => {
               const blob = new Blob([transcript], { type: "text/plain" });
               const url = URL.createObjectURL(blob);
@@ -150,7 +150,7 @@ function OverridesPanel({
         />
       </label>
       <button
-        className="self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        className="cursor-pointer self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
         onClick={() => onChange(defaults)}
       >
         Reset

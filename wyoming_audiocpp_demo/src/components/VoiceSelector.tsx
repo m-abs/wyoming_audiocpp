@@ -2,22 +2,18 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
-import type { Overrides } from "../lib/config";
 
 export function VoiceSelector({
   ttsBase,
-  overrides,
-  onChange,
 }: {
   ttsBase: string;
-  overrides: Overrides;
-  onChange: (o: Overrides) => void;
 }) {
   const [text, setText] = useState("");
   const [voiceName, setVoiceName] = useState("");
   const [voices, setVoices] = useState<{ name: string; model: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playing, setPlaying] = useState(false);
+  const [synthesizing, setSynthesizing] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -30,26 +26,22 @@ export function VoiceSelector({
       .finally(() => setLoading(false));
   }, []);
 
-  const play = useCallback(async () => {
-    if (!text.trim()) {
-      setError("Enter some text first.");
-      return;
-    }
+  const synthesize = useCallback(async () => {
+    if (!text.trim()) return;
     setError("");
-    setPlaying(true);
+    setSynthesizing(true);
     try {
       const res = await api.textToSpeech(text, voiceName || undefined);
       const blob = await res.blob();
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
+      setAudioUrl(url);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "TTS failed.");
     } finally {
-      setPlaying(false);
+      setSynthesizing(false);
     }
-  }, [text, voiceName]);
+  }, [text, voiceName, audioUrl]);
 
   return (
     <section className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -65,7 +57,7 @@ export function VoiceSelector({
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-zinc-500">Voice</span>
         <select
-          className="rounded border border-zinc-300 p-1.5 dark:border-zinc-700"
+          className="rounded border border-zinc-300 bg-white p-1.5 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           value={voiceName}
           onChange={(e) => setVoiceName(e.target.value)}
           disabled={loading || voices.length === 0}
@@ -81,26 +73,17 @@ export function VoiceSelector({
 
       <div className="flex flex-wrap items-center gap-3">
         <button
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          onClick={play}
-          disabled={playing || loading}
+          className="cursor-pointer rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={synthesize}
+          disabled={synthesizing || loading || !text.trim()}
         >
-          {playing ? "Playing…" : "Play"}
+          {synthesizing ? "Synthesizing…" : "Synthesize"}
         </button>
       </div>
+      {audioUrl && <audio src={audioUrl} controls className="w-full" />}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <OverridesPanel overrides={overrides} onChange={onChange} />
     </section>
   );
 }
 
-function OverridesPanel({
-  overrides,
-  onChange,
-}: {
-  overrides: Overrides;
-  onChange: (o: Overrides) => void;
-}) {
-  return null;
-}

@@ -1,11 +1,11 @@
 """Configuration for the Wyoming audio.cpp TTS bridge.
 
 Configuration is layered, later layers win in this order: defaults (the
-dataclass field values), then ``config.json`` with project settings and voice
-overrides as a ``tts_voice`` object plus per-scalar fields prefixed by
-``tts_voice0_<field>``, then ``WYO_<FIELD>`` environment variables where each
-value is upper-cased to match its dataclass name so a container can configure
-without flags or an edit here; finally command-line overrides on top.
+dataclass field values), then ``config.json`` with project settings and a
+``tts_voices`` list of voice objects, then ``WYO_<FIELD>`` environment
+variables where each value is upper-cased to match its dataclass name so a
+container can configure without flags or an edit here; finally command-line
+overrides on top.
 """
 
 from __future__ import annotations

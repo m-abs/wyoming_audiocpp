@@ -65,7 +65,7 @@ def test_build_tts_info_single_voice():
     assert len(info) == 1
     voice = info[0]
     assert voice.name == "omnivoice"
-    assert voice.description == "audio.cpp voice (omnivoice)"
+    assert voice.description == "omnivoice (omnivoice)"
     assert voice.languages == ["en"]
     assert voice.installed is True
 
@@ -82,6 +82,7 @@ def test_build_tts_info_multiple_voices():
     assert info[0].languages == ["da"]
     assert info[1].name == "male"
     assert info[1].languages == ["en"]
+    assert info[0].description != info[1].description
 
 
 async def test_describe_writes_info():

@@ -33,7 +33,10 @@ def coerce(model: str, name: str, value: Any) -> Any:
     """Coerce a param value to its declared type; pass through when unknown."""
     t = param_types(model).get(name)
     if t in ("number", "slider"):
-        return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"param {name!r} must be numeric, got {value!r}")
     if t == "bool":
         if isinstance(value, bool):
             return value

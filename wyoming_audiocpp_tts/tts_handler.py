@@ -101,7 +101,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
         return [
             TtsVoice(
                 name=v.voice_name,
-                description=f"audio.cpp voice ({v.model})",
+                description=f"{v.voice_name} ({v.model})",
                 languages=[v.language] if v.language else ["en"],
                 attribution=Attribution(
                     name="audio.cpp",
@@ -120,6 +120,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             for v in self.config.tts_voices:
                 if v.voice_name == name:
                     return v
+            _LOGGER.warning("Voice %r not found; falling back to first voice", name)
         return self.config.tts_voices[0]
 
     def _open_wav(self, fmt: "audiocpp_client.WavFormat") -> None:

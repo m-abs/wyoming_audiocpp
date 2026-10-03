@@ -30,9 +30,20 @@ logger = logging.getLogger("wyoming_audiocpp_asr")
 def create_app(config: Config) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_asr")
+    @app.before_request
+    def cors_preflight():
+        if request.method == "OPTIONS":
+            resp = Response(status=200)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            return resp
+
     @app.after_request
     def cors(resp):
         resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
         return resp
 
     @app.route("/api/info", methods=["GET"])

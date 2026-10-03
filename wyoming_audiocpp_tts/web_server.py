@@ -59,7 +59,7 @@ def _render_index() -> str:
         "      data.voices.forEach(v => {\n"
         "        const opt = document.createElement('option');\n"
         "        opt.value = v.name;\n"
-        "        opt.textContent = v.name;\n"
+        "        opt.textContent = v.name + ' (' + v.model + ')';\n"
         "        select.appendChild(opt);\n"
         "      });\n"
         "    });\n"
@@ -105,14 +105,6 @@ def make_tts_web_server(config: "Config", flask_app: "Flask") -> "Flask":
                 "tts_voices": [v.voice_name for v in config.tts_voices],
             }
         )
-    def _api_voices() -> Response:
-        return jsonify({
-            "voices": [
-                {"name": v.voice_name, "model": v.model}
-                for v in config.tts_voices
-            ]
-        })
-    flask_app.add_url_rule("/api/voices", endpoint=f"api_voices_{id(config)}", view_func=_api_voices)
     return flask_app
 
 

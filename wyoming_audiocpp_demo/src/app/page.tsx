@@ -3,15 +3,12 @@
 import { useState } from "react";
 import { VoiceSelector } from "../components/VoiceSelector";
 import { AsrUpload } from "../components/AsrUpload";
-import type { Overrides } from "../lib/config";
+import { defaults, type Overrides } from "../lib/config";
 
 export const headers = {};
 
 export default function Home() {
-  const [overrides, setOverrides] = useState<Overrides>({
-    ttsBase: "http://localhost:5001",
-    asrBase: "http://localhost:5000",
-  });
+  const [overrides, setOverrides] = useState<Overrides>(defaults);
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-black">
@@ -27,7 +24,7 @@ export default function Home() {
         </header>
 
         <div className="grid flex-1 gap-6 md:grid-cols-2">
-          <VoiceSelector overrides={overrides} ttsBase={overrides.ttsBase} onChange={setOverrides} />
+          <VoiceSelector ttsBase={overrides.ttsBase} />
           <AsrUpload overrides={overrides} onChange={setOverrides} />
         </div>
 
