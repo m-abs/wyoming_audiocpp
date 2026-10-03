@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import time
 import wave
 from typing import TYPE_CHECKING, Optional
 
@@ -67,6 +68,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
         )
 
     async def handle_event(self, event: Event) -> bool:
+        logger.debug("Event: %s", event.type)
         if Transcribe.is_type(event.type):
             self._language = Transcribe.from_event(event).language
             return True
@@ -87,6 +89,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
             await self.write_event(build_asr_info(self.config).event())
             return True
 
+        logger.error("Unhandled event type: %s", event.type)
         return True
 
     def _start_utterance(self) -> None:
@@ -133,6 +136,13 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
         if not language or language == _AUTO_LANGUAGE:
             language = self.config.language
 
+        # Compute audio duration for the speed ratio.
+        audio_duration = 0.0
+        if wav_bytes:
+            with wave.open(io.BytesIO(wav_bytes), "rb") as w:
+                audio_duration = w.getnframes() / w.getframerate()
+
+        t0 = time.perf_counter()
         try:
             if not wav_bytes:
                 # No audio was accumulated: nothing to transcribe.
@@ -151,6 +161,18 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
                 Error(text=f"audio.cpp transcription failed: {exc}").event()
             )
             return
+        elapsed = time.perf_counter() - t0
+
+        if audio_duration > 0:
+            ratio = audio_duration / elapsed if elapsed > 0 else float("inf")
+            logger.debug(
+                "Transcribed %.1fs audio in %.2fs (%.1fx realtime)",
+                audio_duration,
+                elapsed,
+                ratio,
+            )
+        else:
+            logger.debug("No audio to transcribe (%.2fs)", elapsed)
 
         transcript = Transcript(
             text=result.get("text", ""), language=result.get("language")

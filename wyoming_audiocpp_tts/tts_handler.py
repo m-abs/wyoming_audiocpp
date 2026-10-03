@@ -12,6 +12,7 @@ import asyncio
 import logging
 import os
 import tempfile
+import time
 import wave
 from typing import TYPE_CHECKING, List, Optional
 
@@ -56,7 +57,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
 
     async def handle_event(self, event) -> bool:
         """Handle an event; return True to stay connected, False to disconnect."""
-        _LOGGER.info("Handling event of type: %s", event)
+        _LOGGER.debug("Event: %s", event.type)
         if Describe.is_type(event.type):
             await self._handle_describe(event)
             return True
@@ -67,10 +68,11 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
 
         if SynthesizeStop.is_type(event.type):
             # HA signals end of input; acknowledge with SynthesizeStopped.
+            _LOGGER.debug("SynthesizeStop -> SynthesizeStopped")
             await self.write_event(SynthesizeStopped().event())
             return True
 
-        _LOGGER.warning("Unhandled event type: %s", event.type)
+        _LOGGER.error("Unhandled event type: %s", event.type)
 
         return True
 
@@ -135,17 +137,29 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
         handle released, even if the upstream audio.cpp call fails mid-stream.
         """
         synthesize = Synthesize.from_event(event)
-        _LOGGER.info("Starting synthesis for text: %s", synthesize.text)
+        _LOGGER.debug("Synthesize: %r", synthesize.text[:80])
 
+        t0 = time.perf_counter()
         try:
             fmt, chunks = await self._synthesize(synthesize)
         except Exception:
             # Upstream failed; close the stream.
+            _LOGGER.exception("Synthesis failed")
             await self.write_event(AudioStop().event())
             return
+        elapsed = time.perf_counter() - t0
+
+        total_pcm = sum(len(c) for c in chunks)
+        audio_duration = total_pcm / (fmt.sample_rate * fmt.sampwidth * fmt.channels)
+        ratio = audio_duration / elapsed if elapsed > 0 else float("inf")
+        _LOGGER.debug(
+            "Generated %.1fs audio in %.2fs (%.1fx realtime)",
+            audio_duration,
+            elapsed,
+            ratio,
+        )
 
         self._open_wav(fmt)
-        _LOGGER.info("Opened WAV for text:")
         await self.write_event(
             AudioStart(
                 rate=fmt.sample_rate,
@@ -154,8 +168,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             ).event()
         )
         try:
-            for i, audio in enumerate(chunks):
-                _LOGGER.info("Writing audio chunk %d", i)
+            for audio in chunks:
                 if self._wav is not None:
                     self._wav.writeframes(audio)
                 await self.write_event(
@@ -167,10 +180,8 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
                     ).event()
                 )
         finally:
-            _LOGGER.info("Closing WAV for text: %s", synthesize.text)
             self._close_wav()
             await self.write_event(AudioStop().event())
-            _LOGGER.info("Audio finished for text: %s", synthesize.text)
 
     async def _synthesize(
         self, synthesize
