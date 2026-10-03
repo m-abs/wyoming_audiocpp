@@ -15,7 +15,7 @@ from wyoming_audiocpp_tts.config import Config, VoiceConfig
 from wyoming_audiocpp_tts.tts_handler import AudioCppTtsEventHandler
 
 from wyoming.event import Event
-from wyoming.tts import Synthesize
+from wyoming.tts import Synthesize, SynthesizeStop, SynthesizeStopped
 
 START = "audio-start"
 CHUNK = "audio-chunk"
@@ -99,9 +99,11 @@ async def test_synthesize_streams_audio_to_wav_and_events(tmp_path):
     wav = tmp_path / "out.wav"
     handler, recorded = build_handler(wav)
 
+    from wyoming_audiocpp_tts.audiocpp_client import WavFormat
+
     def fake_synthesize(endpoint, voice, text, **kwargs):
-        yield b"PART1"
-        yield b"PART2"
+        fmt = WavFormat(sample_rate=24000, channels=1, sampwidth=2)
+        return fmt, [b"PART1", b"PART2"]
 
     with mock.patch.object(audiocpp_client, "synthesize", side_effect=fake_synthesize):
         await handler.handle_event(Synthesize(text="hello").event())
@@ -114,7 +116,7 @@ async def test_synthesize_streams_audio_to_wav_and_events(tmp_path):
     with wave.open(handler._wav_path, "rb") as read_wav:
         assert read_wav.getnchannels() == 1
         assert read_wav.getsampwidth() == 2
-        assert read_wav.getframerate() == 16000
+        assert read_wav.getframerate() == 24000
         assert read_wav.getnframes() > 0
 
 
@@ -122,8 +124,11 @@ async def test_synthesize_single_audio_chunk(tmp_path):
     wav = tmp_path / "out.wav"
     handler, recorded = build_handler(wav)
 
+    from wyoming_audiocpp_tts.audiocpp_client import WavFormat
+
     def fake_synthesize(endpoint, voice, text, **kwargs):
-        yield b"\x00\x00"
+        fmt = WavFormat(sample_rate=24000, channels=1, sampwidth=2)
+        return fmt, [b"\x00\x00"]
 
     with mock.patch.object(audiocpp_client, "synthesize", side_effect=fake_synthesize):
         await handler.handle_event(Synthesize(text="hi").event())
@@ -139,12 +144,11 @@ async def test_synthesize_upstream_failure_terminates_stream_and_closes_wav(tmp_
         raise RuntimeError("upstream audio.cpp error")
 
     with mock.patch.object(audiocpp_client, "synthesize", side_effect=fake_synthesize):
-        with pytest.raises(RuntimeError):
-            await handler.handle_event(Synthesize(text="hello").event())
+        await handler.handle_event(Synthesize(text="hello").event())
 
-    # The client stream must still be terminated and the WAV closed even when
-    # the upstream audio.cpp call fails.
-    assert types(recorded) == [START, STOP]
+    # The client stream must be terminated even when the upstream call fails.
+    # No AudioStart is sent because we never got a format from audio.cpp.
+    assert types(recorded) == [STOP]
     assert handler._wav is None
 
 
@@ -154,3 +158,14 @@ async def test_unknown_event_returns_true():
 
     assert result is True
     assert recorded == []
+
+
+async def test_synthesize_stop_acknowledged():
+    """HA sends SynthesizeStop after AudioStop; we must reply with SynthesizeStopped."""
+    handler, recorded = build_handler(None)
+
+    result = await handler.handle_event(SynthesizeStop().event())
+
+    assert result is True
+    assert len(recorded) == 1
+    assert recorded[0].type == "synthesize-stopped"

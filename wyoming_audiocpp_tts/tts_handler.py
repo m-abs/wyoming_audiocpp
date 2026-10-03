@@ -1,19 +1,15 @@
 """Turn Wyoming TTS events into calls to audio.cpp's TTS endpoint.
 
-audio.cpp is an OpenAI-compatible HTTP server, not a Wyoming service, so this
-bridge relays the raw bytes and turns them back into TTS chunks on the edge
-(streaming). Reuses audiocpp_client.synthesize() and Config; only here do
-events map onto those calls.
-
-Streaming: emit ``AudioStart`` with the canonical format, then relay each
-audio.cpp batch as an ``AudioChunk`` carrying raw PCM bytes. The synthesized
-audio is also written to a WAV file on disk; the stream terminates with
-``AudioStop``.
+audio.cpp's speech endpoint returns a WAV file; this bridge parses the header
+to get the real format, strips it, and relays raw PCM bytes to Wyoming clients.
+The synthesized audio is also written to a WAV file on disk; the stream
+terminates with ``AudioStop``.
 """
 
 
 from dataclasses import dataclass
 import asyncio
+import logging
 import os
 import tempfile
 import wave
@@ -32,16 +28,12 @@ from wyoming.info import (
 )
 from wyoming.server import AsyncEventHandler
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
-from wyoming.tts import Synthesize
-
-DEFAULT_SAMPLE_RATE = 16000
-WIDTH_BYTES = 2
-CHANNELS = 1
-
+from wyoming.tts import Synthesize, SynthesizeStop, SynthesizeStopped
 
 if TYPE_CHECKING:
     from .config import Config
 
+_LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class Voice:
@@ -64,6 +56,7 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
 
     async def handle_event(self, event) -> bool:
         """Handle an event; return True to stay connected, False to disconnect."""
+        _LOGGER.info("Handling event of type: %s", event)
         if Describe.is_type(event.type):
             await self._handle_describe(event)
             return True
@@ -71,6 +64,13 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
         if Synthesize.is_type(event.type):
             await self._handle_synthesize(event)
             return True
+
+        if SynthesizeStop.is_type(event.type):
+            # HA signals end of input; acknowledge with SynthesizeStopped.
+            await self.write_event(SynthesizeStopped().event())
+            return True
+
+        _LOGGER.warning("Unhandled event type: %s", event.type)
 
         return True
 
@@ -115,12 +115,12 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             )
         ]
 
-    def _open_wav(self) -> None:
+    def _open_wav(self, fmt: "audiocpp_client.WavFormat") -> None:
         """Open the WAV sink for the current synthesis."""
         self._wav = wave.open(self._wav_path, "wb")
-        self._wav.setnchannels(CHANNELS)
-        self._wav.setsampwidth(WIDTH_BYTES)
-        self._wav.setframerate(DEFAULT_SAMPLE_RATE)
+        self._wav.setnchannels(fmt.channels)
+        self._wav.setsampwidth(fmt.sampwidth)
+        self._wav.setframerate(fmt.sample_rate)
 
     def _close_wav(self) -> None:
         if self._wav is not None:
@@ -135,50 +135,58 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
         handle released, even if the upstream audio.cpp call fails mid-stream.
         """
         synthesize = Synthesize.from_event(event)
-        self._open_wav()
-        await self.write_event(
-            AudioStart(
-                rate=DEFAULT_SAMPLE_RATE,
-                width=WIDTH_BYTES,
-                channels=CHANNELS,
-            ).event()
-        )
+        _LOGGER.info("Starting synthesis for text: %s", synthesize.text)
 
         try:
-            async for audio in self._synthesize(synthesize):
+            fmt, chunks = await self._synthesize(synthesize)
+        except Exception:
+            # Upstream failed; close the stream.
+            await self.write_event(AudioStop().event())
+            return
+
+        self._open_wav(fmt)
+        _LOGGER.info("Opened WAV for text:")
+        await self.write_event(
+            AudioStart(
+                rate=fmt.sample_rate,
+                width=fmt.sampwidth,
+                channels=fmt.channels,
+            ).event()
+        )
+        try:
+            for i, audio in enumerate(chunks):
+                _LOGGER.info("Writing audio chunk %d", i)
                 if self._wav is not None:
                     self._wav.writeframes(audio)
                 await self.write_event(
                     AudioChunk(
                         audio=audio,
-                        rate=DEFAULT_SAMPLE_RATE,
-                        width=WIDTH_BYTES,
-                        channels=CHANNELS,
+                        rate=fmt.sample_rate,
+                        width=fmt.sampwidth,
+                        channels=fmt.channels,
                     ).event()
                 )
         finally:
+            _LOGGER.info("Closing WAV for text: %s", synthesize.text)
             self._close_wav()
             await self.write_event(AudioStop().event())
+            _LOGGER.info("Audio finished for text: %s", synthesize.text)
 
-    async def _synthesize(self, synthesize):
-        """Yield audio.cpp audio chunks for the synthesize request.
+    async def _synthesize(
+        self, synthesize
+    ) -> tuple["audiocpp_client.WavFormat", List[bytes]]:
+        """Call audio.cpp in a thread and return the format + all PCM chunks.
 
-        audio.cpp streams its response in batches; each batch is written to the
-        WAV and relayed as an empty-text ``SynthesizeChunk``. The blocking HTTP
-        call runs in a thread so it does not stall the Wyoming event loop.
+        The blocking HTTP call runs in a thread so it does not stall the
+        Wyoming event loop. Chunks are buffered so they arrive in order.
         """
         text = synthesize.text
-        chunks = await self._run_blocking(
-            audiocpp_client.synthesize,
-            self.config.tts_endpoint,
-            self.config.tts_voice,
-            text,
-        )
-        for chunk in chunks:
-            yield chunk
-
-    @staticmethod
-    def _run_blocking(func, *args, **kwargs):
-        """Run a blocking generator in a thread pool and return its chunks."""
         loop = asyncio.get_running_loop()
-        return loop.run_in_executor(None, lambda: list(func(*args, **kwargs)))
+        return await loop.run_in_executor(
+            None,
+            lambda: audiocpp_client.synthesize(
+                self.config.tts_endpoint,
+                self.config.tts_voice,
+                text,
+            ),
+        )

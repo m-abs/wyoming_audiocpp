@@ -38,8 +38,9 @@ async def server_and_port():
 
 
 def fake_synthesize(endpoint, voice, text, **kwargs):
-    yield b"\x01\x02\x03\x04"
-    yield b"\x05\x06\x07\x08"
+    from wyoming_audiocpp_tts.audiocpp_client import WavFormat
+    fmt = WavFormat(sample_rate=24000, channels=1, sampwidth=2)
+    return fmt, [b"\x01\x02\x03\x04", b"\x05\x06\x07\x08"]
 
 
 async def test_client_receives_audio_stream(server_and_port):
@@ -54,7 +55,7 @@ async def test_client_receives_audio_stream(server_and_port):
             while True:
                 event = await client.read_event()
                 if AudioStart.is_type(event.type):
-                    assert event.data["rate"] == 16000
+                    assert event.data["rate"] == 24000
                     assert event.data["width"] == 2
                     assert event.data["channels"] == 1
                     types.append("audio-start")
