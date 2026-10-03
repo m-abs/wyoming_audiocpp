@@ -19,7 +19,7 @@ import dataclasses
 import os
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 DEFAULT_CONFIG_PATH = Path("config.json")
@@ -81,8 +81,10 @@ class Config:
     asr_model: str = DEFAULT_MODEL
     """audio.cpp model id used for transcription. Defaults to ``hviske``."""
 
-    asr_language: Optional[str] = DEFAULT_LANGUAGE
-    """Language hint passed to audio.cpp. ``None`` disables it."""
+    asr_language: Union[str, List[str]] = DEFAULT_LANGUAGE
+    """Language hint passed to audio.cpp. A single string (e.g. ``"da"``) or a
+    list of supported language codes (e.g. ``["da", "en"]``). ``None`` disables
+    the hint."""
 
     uri: str = DEFAULT_URI
     """Wyoming TCP bind URI, e.g. ``tcp://0.0.0.0:55001``."""
@@ -185,6 +187,20 @@ class Config:
             )
 
         self.parse_tcp_uri()
+
+        if self.asr_language is not None:
+            if not isinstance(self.asr_language, (str, list)):
+                raise ValueError(
+                    f"asr_language must be a string or a list of strings, "
+                    f"got {type(self.asr_language).__name__}"
+                )
+            if isinstance(self.asr_language, list):
+                for lang in self.asr_language:
+                    if not isinstance(lang, str):
+                        raise ValueError(
+                            f"asr_language list items must be strings, "
+                            f"got {type(lang).__name__}"
+                        )
 
         if self.asr_web_server and not self.asr_web_server_port > 0:
             raise ValueError(

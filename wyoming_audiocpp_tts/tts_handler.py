@@ -29,7 +29,7 @@ from wyoming.info import (
 )
 from wyoming.server import AsyncEventHandler
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
-from wyoming.tts import Synthesize, SynthesizeStop, SynthesizeStopped
+from wyoming.tts import Synthesize, SynthesizeChunk, SynthesizeStart, SynthesizeStop, SynthesizeStopped
 
 if TYPE_CHECKING:
     from .config import Config
@@ -70,6 +70,12 @@ class AudioCppTtsEventHandler(AsyncEventHandler):
             # HA signals end of input; acknowledge with SynthesizeStopped.
             _LOGGER.debug("SynthesizeStop -> SynthesizeStopped")
             await self.write_event(SynthesizeStopped().event())
+            return True
+
+        if SynthesizeStart.is_type(event.type) or SynthesizeChunk.is_type(event.type):
+            # HA sends these as part of its TTS handshake; the actual synthesis
+            # uses the non-streaming Synthesize event. Acknowledge and stay.
+            _LOGGER.debug("Ignoring %s", event.type)
             return True
 
         _LOGGER.error("Unhandled event type: %s", event.type)

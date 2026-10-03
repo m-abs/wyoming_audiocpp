@@ -135,6 +135,10 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
         language = self._language
         if not language or language == _AUTO_LANGUAGE:
             language = self.config.asr_language
+        # The transcription endpoint accepts a single language code; a list of
+        # supported languages is only used for the Info response.
+        if isinstance(language, list):
+            language = None
 
         # Compute audio duration for the speed ratio.
         audio_duration = 0.0
@@ -204,7 +208,7 @@ def build_asr_info(config: "Config"):
                 installed=True,
                 attribution=attribution,
                 version=__version__,
-                languages=[config.asr_language or "auto"],
+                languages=config.asr_language if isinstance(config.asr_language, list) else [config.asr_language or "auto"],
             )
         ],
     )

@@ -103,6 +103,22 @@ def test_validate_rejects_non_tcp_uri():
     with pytest.raises(ValueError):
         config.validate()
 
+def test_validate_accepts_language_list():
+    config = Config(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=["da", "en"])
+    config.validate()
+
+
+def test_validate_rejects_non_string_language_list_item():
+    config = Config(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=["da", 42])
+    with pytest.raises(ValueError):
+        config.validate()
+
+
+def test_validate_rejects_non_string_language():
+    config = Config(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=42)
+    with pytest.raises(ValueError):
+        config.validate()
+
 
 def test_validate_rejects_bad_web_server_port():
     config = Config(asr_model="hviske", asr_web_server=True, asr_web_server_port=0)

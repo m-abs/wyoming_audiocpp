@@ -35,7 +35,7 @@ def test_voice_request_body_with_options():
         name="female",
         language="da",
         speed=1.5,
-        options={"instruct": "female voice", "num_inference_steps": "32"},
+        options={"instruct": "female", "num_inference_steps": "32"},
     )
     body = voice.request_body("hello")
     assert body["model"] == "omnivoice"

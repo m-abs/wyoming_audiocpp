@@ -211,6 +211,10 @@ def test_build_asr_info_uses_config_language():
     info = build_asr_info(_config())
     assert info.asr[0].models[0].languages == ["da"]
 
+def test_build_asr_info_uses_language_list():
+    info = build_asr_info(_config(asr_language=["da", "en"]))
+    assert info.asr[0].models[0].languages == ["da", "en"]
+
 
 async def test_disconnect_closes_open_utterance(handler, writer):
     """A client that drops mid-utterance does not leak the WAV buffer."""
