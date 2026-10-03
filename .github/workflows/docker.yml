@@ -30,6 +30,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Cache build layers so the "tag as latest" steps below reuse the image
+      # instead of rebuilding it from scratch.
+      - name: Cache Docker layers
+        uses: docker/cache-action@v3
+
       - name: Build and push ASR image
         uses: docker/build-push-action@v5
         with:
@@ -38,7 +43,18 @@ jobs:
           push: true
           tags: |
             ghcr.io/m-abs/wyoming_audiocpp/asr:${{ steps.version.outputs.version }}
-            ${{ if github.ref == 'refs/heads/main' }}ghcr.io/m-abs/wyoming_audiocpp/asr:latest{{ endif }}
+
+      # The `latest` tag is only meaningful on main; GitHub Actions has no
+      # if/else inside expressions, so the conditional is a step-level `if:`.
+      - name: Tag ASR image as latest (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: asr
+          push: true
+          tags: |
+            ghcr.io/m-abs/wyoming_audiocpp/asr:latest
 
       - name: Build and push TTS image
         uses: docker/build-push-action@v5
@@ -48,4 +64,13 @@ jobs:
           push: true
           tags: |
             ghcr.io/m-abs/wyoming_audiocpp/tts:${{ steps.version.outputs.version }}
-            ${{ if github.ref == 'refs/heads/main' }}ghcr.io/m-abs/wyoming_audiocpp/tts:latest{{ endif }}
+
+      - name: Tag TTS image as latest (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: tts
+          push: true
+          tags: |
+            ghcr.io/m-abs/wyoming_audiocpp/tts:latest

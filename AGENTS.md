@@ -190,14 +190,6 @@ Lint/format is configured **per distribution** in each `pyproject.toml`
 
 ### Known staleness (verify before relying on docs/tests)
 
-- `tests/test_e2e_bridges.py` and the README TTS section still pass
-  `--host/--port`, but the current `wyoming_audiocpp_tts/__main__.py` is a
-  Wyoming TCP service taking **`--uri`** (`.vscode/launch.json` matches code).
-  The e2e test will fail on argparse as written.
-- README says "editable install from the project root creates the
-  `wyoming-audiocpp-tts` console script" — **stale**: the root `pyproject.toml`
-  defines only the ASR dist; TTS must be installed from
-  `wyoming_audiocpp_tts/`. Confirm with `pip show wyoming-audiocpp-tts`.
 - No in-scope `CHANGELOG.md` exists (only reference impls have them); the de-facto
   record is `README.md` + dated docs under `.agents/plans/` and `.agents/review/`.
 
