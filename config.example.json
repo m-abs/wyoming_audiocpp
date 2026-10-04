@@ -26,10 +26,10 @@
     {
       "model": "omnivoice",
       "name": "Male voice",
-      "language": "en",
+      "language": "da",
       "speed": 1.1,
       "options": {
-        "instruct": "male, indian accent"
+        "instruct": "male"
       }
     }
   ]

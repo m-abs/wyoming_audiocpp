@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "compounds": [
         {
-            "name": "All",
+            "name": "Launch all",
             "configurations": [
                 "Wyoming ASR",
                 "Wyoming TTS",

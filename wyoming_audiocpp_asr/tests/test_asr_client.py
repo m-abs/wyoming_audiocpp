@@ -25,7 +25,7 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.server import AsyncTcpServer
 
-from ..config import Config
+from ..config import AsrConfig
 from ..server import handler_factory
 
 AUDIOCPP_URI = "http://audio.cpp:8080"
@@ -64,7 +64,7 @@ async def server_and_port():
     if not _audiocpp_reachable():
         pytest.skip(f"audio.cpp not reachable at {AUDIOCPP_URI}")
 
-    config = Config(audiocpp_uri=AUDIOCPP_URI)
+    config = AsrConfig(audiocpp_uri=AUDIOCPP_URI)
     server = AsyncTcpServer("127.0.0.1", 0)
     await server.start(handler_factory(config))
     port = server._server.sockets[0].getsockname()[1]

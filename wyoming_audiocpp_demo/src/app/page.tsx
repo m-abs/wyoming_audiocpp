@@ -8,7 +8,7 @@ import { defaults, type Overrides } from "../lib/config";
 export const headers = {};
 
 export default function Home() {
-  const [overrides, setOverrides] = useState<Overrides>(defaults);
+  const [overrides, _] = useState<Overrides>(defaults);
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-black">
@@ -25,12 +25,8 @@ export default function Home() {
 
         <div className="grid flex-1 gap-6 md:grid-cols-2">
           <VoiceSelector ttsBase={overrides.ttsBase} />
-          <AsrUpload overrides={overrides} onChange={setOverrides} />
+          <AsrUpload overrides={overrides} />
         </div>
-
-        <footer className="text-xs text-zinc-400">
-          Point the endpoint overrides at your deployed bridges to test outside localhost.
-        </footer>
       </main>
     </div>
   );

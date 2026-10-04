@@ -32,7 +32,7 @@ from wyoming.server import AsyncEventHandler
 from . import __version__
 
 if TYPE_CHECKING:
-    from .config import Config
+    from .config import AsrConfig
 
 logger = logging.getLogger("wyoming_audiocpp_asr")
 
@@ -57,7 +57,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
     * ``Describe``    -- reply with the service ``Info``.
     """
 
-    def __init__(self, reader, writer, config: "Config") -> None:
+    def __init__(self, reader, writer, config: "AsrConfig") -> None:
         super().__init__(reader, writer)
         self.config = config
         self._language: Optional[str] = None
@@ -188,7 +188,7 @@ class AudioCppAsrEventHandler(AsyncEventHandler):
         self._close_wav()
 
 
-def build_asr_info(config: "Config"):
+def build_asr_info(config: "AsrConfig"):
     """Return the Wyoming ``Info`` describing the ASR program."""
     attribution = Attribution(
         name="audio.cpp", url="https://github.com/0xShug0/audio.cpp"

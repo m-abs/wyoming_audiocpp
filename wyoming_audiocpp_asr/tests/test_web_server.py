@@ -6,7 +6,7 @@ import io
 import pytest
 
 from wyoming_audiocpp_asr import audiocpp_client
-from wyoming_audiocpp_asr.config import Config
+from wyoming_audiocpp_asr.config import AsrConfig
 from wyoming_audiocpp_asr.web_server import make_asr_web_server
 
 MODEL = "hviske"
@@ -16,7 +16,7 @@ from . import synth_wav  # noqa: E402
 
 @pytest.fixture
 def client():
-    config = Config.from_args(None, asr_model=MODEL)
+    config = AsrConfig.from_args(None, asr_model=MODEL)
     return make_asr_web_server(config).test_client()
 
 

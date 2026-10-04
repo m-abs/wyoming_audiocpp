@@ -2,10 +2,9 @@
   "asr_language": "da",
   "asr_model": "hviske",
   "asr_uri": "tcp://0.0.0.0:11301",
-  "asr_web_server": true,
-  "asr_web_server_host": "0.0.0.0",
+  "asr_web_server": false,
+  "asr_web_server_host": "127.0.0.1",
   "asr_web_server_port": 5000,
-  "audiocpp_uri": "http://audio.cpp:8080",
   "tts_uri": "tcp://0.0.0.0:11201",
   "tts_voices": [
     {
@@ -166,7 +165,7 @@
       "speed": 1.1
     }
   ],
-  "tts_web_server": true,
-  "tts_web_server_host": "0.0.0.0",
+  "tts_web_server": false,
+  "tts_web_server_host": "127.0.0.1",
   "tts_web_server_port": 5001
 }
