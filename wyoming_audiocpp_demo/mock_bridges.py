@@ -81,7 +81,16 @@ def api_stt():
 
 @asr.route("/api/info")
 def models():
-    return jsonify({"asr": [{"name": "whisper-1"}]})
+    return jsonify(
+        {
+            "asr": [
+                {
+                    "name": "Wyoming Audio.cpp - asr",
+                    "models": [{"name": "whisper-1", "languages": ["da", "en"]}],
+                }
+            ]
+        }
+    )
 
 
 @asr.route("/")
