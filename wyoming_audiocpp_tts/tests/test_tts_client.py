@@ -20,7 +20,7 @@ from wyoming.client import AsyncTcpClient
 from wyoming.server import AsyncTcpServer
 from wyoming.tts import Synthesize
 
-from ..config import Config
+from ..config import TtsConfig
 from ..server import handler_factory
 from .. import audiocpp_client
 
@@ -28,7 +28,7 @@ from .. import audiocpp_client
 @pytest.fixture
 async def server_and_port():
     """Run the bridge on an ephemeral port; yield (server, port) and tear down."""
-    config = Config()
+    config = TtsConfig()
     server = AsyncTcpServer("127.0.0.1", 0)
     await server.start(handler_factory(config))
     port = server._server.sockets[0].getsockname()[1]

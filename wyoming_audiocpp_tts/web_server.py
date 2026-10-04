@@ -22,7 +22,7 @@ from . import tts_server
 if TYPE_CHECKING:
     from flask import Flask
 
-    from .config import Config
+    from .config import TtsConfig
 
 
 TTS_SERVICE_NAME = "wyoming-audiocpp-tts"
@@ -88,7 +88,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
 """
 
 
-def make_tts_web_server(config: "Config", flask_app: "Flask") -> "Flask":
+def make_tts_web_server(config: "TtsConfig", flask_app: "Flask") -> "Flask":
     """Add browser routes to the existing Flask app."""
     from flask import Response, jsonify
 

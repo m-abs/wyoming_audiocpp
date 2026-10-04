@@ -22,12 +22,12 @@ from typing import Any, Dict
 from flask import Flask, Response, jsonify, request
 
 from . import audiocpp_client
-from .config import Config
+from .config import AsrConfig
 
 logger = logging.getLogger("wyoming_audiocpp_asr")
 
 
-def create_app(config: Config) -> Flask:
+def create_app(config: AsrConfig) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_asr")
     @app.before_request
@@ -91,7 +91,7 @@ def create_app(config: Config) -> Flask:
     return app
 
 
-def fetch_programs(config: Config) -> Dict[str, Any]:
+def fetch_programs(config: AsrConfig) -> Dict[str, Any]:
     """List ASR programs available through the bridge (Wyoming ``Info``)."""
     from .asr_handler import build_asr_info
 

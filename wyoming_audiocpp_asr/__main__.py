@@ -12,7 +12,7 @@ from .config import (
     DEFAULT_URI,
     DEFAULT_WEB_SERVER_HOST,
     DEFAULT_WEB_SERVER_PORT,
-    Config,
+    AsrConfig,
 )
 from .server import create_tcp_server
 
@@ -97,7 +97,7 @@ def main(argv=None) -> None:
         format=args.log_format,
     )
 
-    config = Config.from_args(
+    config = AsrConfig.from_args(
         args.config,
         asr_uri=args.asr_uri,
         audiocpp_uri=args.audiocpp_uri,

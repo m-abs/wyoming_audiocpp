@@ -3,15 +3,15 @@
 import pytest
 
 from wyoming_audiocpp_tts.config import (
-    Config,
-    DEFAULT_AUDIOCPP_URI,
+    TtsConfig,
     DEFAULT_VOICE_MODEL,
     VoiceConfig,
 )
+from wyoming_audiocpp_common.config import DEFAULT_AUDIOCPP_URI
 
 
 def test_defaults():
-    config = Config()
+    config = TtsConfig()
     assert config.audiocpp_uri == DEFAULT_AUDIOCPP_URI
     assert len(config.tts_voices) == 1
     assert config.tts_voices[0].model == DEFAULT_VOICE_MODEL
@@ -19,7 +19,7 @@ def test_defaults():
 
 
 def test_tts_endpoint_strips_trailing_slash():
-    config = Config(audiocpp_uri="http://localhost:8080/")
+    config = TtsConfig(audiocpp_uri="http://localhost:8080/")
     assert config.tts_endpoint == "http://localhost:8080/v1/audio/speech"
 
 
@@ -82,7 +82,7 @@ def test_voice_from_dict_roundtrip():
 
 
 def test_from_dict_overrides():
-    config = Config.from_dict(
+    config = TtsConfig.from_dict(
         {
             "audiocpp_uri": "http://10.0.0.1:8080",
             "tts_voices": [
@@ -115,14 +115,14 @@ def test_from_args_loads_config_file():
         )
         path = tmp.name
 
-    config = Config.from_args(path)
+    config = TtsConfig.from_args(path)
     assert config.audiocpp_uri == "http://example:8080"
     assert len(config.tts_voices) == 2
     assert config.tts_voices[0].name == "female"
 
 
 def test_from_args_missing_config_uses_defaults():
-    config = Config.from_args("/nonexistent/config.json")
+    config = TtsConfig.from_args("/nonexistent/config.json")
     assert config.audiocpp_uri == DEFAULT_AUDIOCPP_URI
     assert len(config.tts_voices) == 1
     assert config.tts_voices[0].model == DEFAULT_VOICE_MODEL
@@ -145,7 +145,7 @@ def test_from_args_config_file_boolean_respected():
         path = tmp.name
 
     # No CLI override for boolean fields → config file values are used.
-    config = Config.from_args(path)
+    config = TtsConfig.from_args(path)
     assert config.tts_web_server is True
     assert config.enable_zeroconf is True
 
@@ -166,7 +166,7 @@ def test_from_args_cli_true_overrides_config_file_false():
         )
         path = tmp.name
 
-    config = Config.from_args(path, tts_web_server=True, enable_zeroconf=True)
+    config = TtsConfig.from_args(path, tts_web_server=True, enable_zeroconf=True)
     assert config.tts_web_server is True
     assert config.enable_zeroconf is True
 
@@ -187,17 +187,17 @@ def test_from_args_none_override_keeps_config_file_value():
         path = tmp.name
 
     # Simulates __main__.py passing `args.flag or None` when the flag is absent.
-    config = Config.from_args(path, tts_web_server=None)
+    config = TtsConfig.from_args(path, tts_web_server=None)
     assert config.tts_web_server is True
 
 def test_validate_rejects_empty_voices():
-    config = Config(audiocpp_uri="http://localhost:8080", tts_voices=[])
+    config = TtsConfig(audiocpp_uri="http://localhost:8080", tts_voices=[])
     with pytest.raises(ValueError, match="No TTS voices configured"):
         config.validate()
 
 
 def test_validate_rejects_missing_model():
-    config = Config(
+    config = TtsConfig(
         audiocpp_uri="http://localhost:8080",
         tts_voices=[VoiceConfig(model="")],
     )
@@ -206,7 +206,7 @@ def test_validate_rejects_missing_model():
 
 
 def test_validate_rejects_bad_scheme():
-    config = Config(
+    config = TtsConfig(
         audiocpp_uri="localhost:8080",
         tts_voices=[VoiceConfig(model="omnivoice")],
     )
@@ -215,7 +215,7 @@ def test_validate_rejects_bad_scheme():
 
 
 def test_validate_rejects_bad_web_server_port():
-    config = Config(
+    config = TtsConfig(
         audiocpp_uri="http://localhost:8080",
         tts_voices=[VoiceConfig(model="omnivoice")],
         tts_web_server=True,

@@ -22,7 +22,7 @@ from flask import Flask, Response, jsonify, request
 from werkzeug.serving import make_server
 
 from .asr_server import create_app
-from .config import Config
+from .config import AsrConfig
 
 logger = logging.getLogger("wyoming_audiocpp_asr")
 
@@ -79,7 +79,7 @@ fetch("/api/status").then((r) => r.json()).then((s) => {
 """
 
 
-def make_asr_web_server(config: Config) -> Flask:
+def make_asr_web_server(config: AsrConfig) -> Flask:
     """Build the demo Flask app (browser UI on top of the HTTP bridge)."""
     app = create_app(config)
 
