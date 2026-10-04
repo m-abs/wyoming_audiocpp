@@ -1,6 +1,6 @@
 [project]
 name = "wyoming-audiocpp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Wyoming protocol ASR and TTS services bridging to audio.cpp"
 readme = "README.md"
 requires-python = ">=3.11"
