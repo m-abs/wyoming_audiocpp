@@ -26,7 +26,7 @@ DEFAULT_CONFIG_PATH = Path("config.json")
 DEFAULT_AUDIOCPP_URI = "http://localhost:8080"
 DEFAULT_MODEL = "hviske"
 DEFAULT_LANGUAGE = "da"
-DEFAULT_URI = "tcp://0.0.0.0:55001"
+DEFAULT_URI = "tcp://0.0.0.0:11301"
 DEFAULT_WEB_SERVER_HOST = "127.0.0.1"
 DEFAULT_WEB_SERVER_PORT = 5000
 ENV_PREFIX = "WYO_"
@@ -86,8 +86,8 @@ class Config:
     list of supported language codes (e.g. ``["da", "en"]``). ``None`` disables
     the hint."""
 
-    uri: str = DEFAULT_URI
-    """Wyoming TCP bind URI, e.g. ``tcp://0.0.0.0:55001``."""
+    asr_uri: str = DEFAULT_URI
+    """Wyoming TCP bind URI, e.g. ``tcp://0.0.0.0:11301``."""
 
     enable_zeroconf: bool = False
     """Whether to register mDNS ``_wyoming._tcp.local.`` discovery."""
@@ -118,13 +118,13 @@ class Config:
         return f"{uri}/{_AUDIOCPP_ENDPOINT.lstrip('/')}"
 
     def parse_tcp_uri(self) -> tuple[str, int]:
-        """Parse ``uri`` into ``(host, port)``.
+        """Parse ``asr_uri`` into ``(host, port)``.
 
         Raises ``ValueError`` when it is not a ``tcp://host:port`` URI.
         """
-        parsed = urlparse(self.uri)
+        parsed = urlparse(self.asr_uri)
         if parsed.scheme != "tcp" or not parsed.hostname or not parsed.port:
-            raise ValueError(f"uri must be tcp://host:port: {self.uri}")
+            raise ValueError(f"asr_uri must be tcp://host:port: {self.asr_uri}")
         return parsed.hostname, parsed.port
 
     def to_dict(self) -> Dict[str, Any]:
@@ -132,7 +132,7 @@ class Config:
             "audiocpp_uri": self.audiocpp_uri,
             "asr_model": self.asr_model,
             "asr_language": self.asr_language,
-            "uri": self.uri,
+            "asr_uri": self.asr_uri,
             "enable_zeroconf": self.enable_zeroconf,
             "asr_web_server": self.asr_web_server,
             "asr_web_server_host": self.asr_web_server_host,

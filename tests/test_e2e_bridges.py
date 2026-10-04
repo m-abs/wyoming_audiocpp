@@ -131,14 +131,14 @@ class BridgeServer:
         if self.kind == "tts":
             cmd = [PY, "-m", "wyoming_audiocpp_tts"]
             tcp_port = self.tcp_port or (self.port + 1)
-            cmd += ["--uri", f"tcp://127.0.0.1:{tcp_port}",
+            cmd += ["--tts-uri", f"tcp://127.0.0.1:{tcp_port}",
                     "--tts-web-server", "--tts-web-server-host", "127.0.0.1",
                     "--tts-web-server-port", str(self.port),
                     "--config", os.path.join(REPO, "config.example.json"),
                     "--audiocpp-uri", audiocpp_uri]
         else:
             cmd = [PY, "-m", "wyoming_audiocpp_asr",
-                   "--uri", f"tcp://127.0.0.1:{self.tcp_port}",
+                   "--asr-uri", f"tcp://127.0.0.1:{self.tcp_port}",
                    "--asr-web-server", "--asr-web-server-host", "127.0.0.1",
                    "--asr-web-server-port", str(self.port),
                    "--config", os.path.join(REPO, "config.example.json"),

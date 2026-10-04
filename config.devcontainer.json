@@ -1,0 +1,11 @@
+{
+  "audiocpp_uri": "http://audio.cpp:8080",
+  "asr_uri": "tcp://0.0.0.0:11301",
+  "asr_web_server": true,
+  "asr_web_server_host": "0.0.0.0",
+  "asr_web_server_port": 5000,
+  "tts_uri": "tcp://0.0.0.0:11201",
+  "tts_web_server": true,
+  "tts_web_server_host": "0.0.0.0",
+  "tts_web_server_port": 5001
+}

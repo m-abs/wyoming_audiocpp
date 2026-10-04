@@ -58,5 +58,5 @@ async def _run(server: AsyncTcpServer, config: "Config") -> None:
 
 def create_tcp_server(config: "Config") -> None:
     """Run the Wyoming TCP server (blocking; starts the asyncio loop)."""
-    server = AsyncServer.from_uri(config.uri)
+    server = AsyncServer.from_uri(config.tts_uri)
     asyncio.run(_run(server, config))

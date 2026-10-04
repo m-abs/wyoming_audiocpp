@@ -62,12 +62,14 @@
 			"packages": [
 				"vim"
 			]
-		}
+		},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
 	},
 	"mounts": [
-		// Mount GitHub CLI configuration to share authentication with the container
-		"source=${localEnv:HOME}/.config/gh/,target=/home/vscode/.config/gh/,type=bind",
 		// Mount SSH keys to share authentication with the container
-		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
+		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly",
+		
+		// Mount host Docker socket for container access
+		"type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
 	]
 }

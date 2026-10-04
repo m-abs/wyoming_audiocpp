@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 DEFAULT_CONFIG_PATH = Path("config.json")
-DEFAULT_URI = "tcp://0.0.0.0:10200"
+DEFAULT_URI = "tcp://0.0.0.0:11201"
 DEFAULT_AUDIOCPP_URI = "http://localhost:8080"
 DEFAULT_ASR_MODEL = "hviske"
 DEFAULT_VOICE_MODEL = "omnivoice"
@@ -112,8 +112,8 @@ class Config:
     tts_voices: List[VoiceConfig] = field(default_factory=lambda: [VoiceConfig()])
     """List of TTS voices. Defaults to one omnivoice voice."""
 
-    uri: str = DEFAULT_URI
-    """Wyoming TCP bind, e.g. ``tcp://0.0.0.0:10200``."""
+    tts_uri: str = DEFAULT_URI
+    """Wyoming TCP bind, e.g. ``tcp://0.0.0.0:11201``."""
 
     enable_zeroconf: bool = False
     """Whether to register mDNS ``_wyoming._tcp.local.`` discovery."""
