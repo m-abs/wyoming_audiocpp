@@ -68,6 +68,71 @@ def test_from_args_missing_config_uses_defaults():
     assert config.asr_model == "hviske"
 
 
+def test_from_args_config_file_boolean_respected():
+    """Config file boolean values are used when CLI does not override them."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "asr_model": "hviske",
+                "asr_web_server": True,
+                "enable_zeroconf": True,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    # No CLI override for boolean fields → config file values are used.
+    config = Config.from_args(path)
+    assert config.asr_web_server is True
+    assert config.enable_zeroconf is True
+
+
+def test_from_args_cli_true_overrides_config_file_false():
+    """CLI --flag (True) overrides a config file value of false."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "asr_model": "hviske",
+                "asr_web_server": False,
+                "enable_zeroconf": False,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    config = Config.from_args(path, asr_web_server=True, enable_zeroconf=True)
+    assert config.asr_web_server is True
+    assert config.enable_zeroconf is True
+
+
+def test_from_args_none_override_keeps_config_file_value():
+    """None overrides are ignored, so the config file value survives."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "asr_model": "hviske",
+                "asr_web_server": True,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    # Simulates __main__.py passing `args.flag or None` when the flag is absent.
+    config = Config.from_args(path, asr_web_server=None)
+    assert config.asr_web_server is True
+
 def test_validate_rejects_bad_scheme():
     config = Config(audiocpp_uri="localhost:8080", asr_model="hviske")
     with pytest.raises(ValueError):

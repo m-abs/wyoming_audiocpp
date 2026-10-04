@@ -1,7 +1,6 @@
 {
-  "audiocpp_uri": "http://localhost:8080",
   "asr_model": "hviske",
-  "asr_language": ["da", "en"],
+  "asr_language": "da",
   "asr_uri": "tcp://0.0.0.0:11301",
   "tts_uri": "tcp://0.0.0.0:11201",
   "enable_zeroconf": false,
@@ -16,20 +15,20 @@
   "tts_voices": [
     {
       "model": "omnivoice",
-      "name": "Female voice",
+      "name": "Young woman",
       "language": "da",
       "speed": 1.0,
       "options": {
-        "instruct": "female"
+        "instruct": "female, young adult"
       }
     },
     {
       "model": "omnivoice",
-      "name": "Male voice",
+      "name": "Middle-aged man",
       "language": "da",
       "speed": 1.1,
       "options": {
-        "instruct": "male"
+        "instruct": "male, moderate pitch, middle-aged"
       }
     }
   ]

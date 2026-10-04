@@ -148,10 +148,11 @@ class Config:
             voices = [VoiceConfig.from_dict(v) for v in voices_data]
         else:
             voices = [VoiceConfig()]
-        return cls(
-            audiocpp_uri=data.get("audiocpp_uri", DEFAULT_AUDIOCPP_URI),
-            tts_voices=voices,
-        )
+        result = cls(tts_voices=voices)
+        for field in fields(cls):
+            if field.name in data and field.name != "tts_voices":
+                setattr(result, field.name, data[field.name])
+        return result
 
     def _apply_env(self) -> "Config":
         """Return a copy of self with ``WYO_<FIELD>`` env vars applied.

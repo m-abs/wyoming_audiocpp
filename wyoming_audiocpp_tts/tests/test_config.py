@@ -128,6 +128,68 @@ def test_from_args_missing_config_uses_defaults():
     assert config.tts_voices[0].model == DEFAULT_VOICE_MODEL
 
 
+def test_from_args_config_file_boolean_respected():
+    """Config file boolean values are used when CLI does not override them."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "tts_web_server": True,
+                "enable_zeroconf": True,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    # No CLI override for boolean fields → config file values are used.
+    config = Config.from_args(path)
+    assert config.tts_web_server is True
+    assert config.enable_zeroconf is True
+
+
+def test_from_args_cli_true_overrides_config_file_false():
+    """CLI --flag (True) overrides a config file value of false."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "tts_web_server": False,
+                "enable_zeroconf": False,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    config = Config.from_args(path, tts_web_server=True, enable_zeroconf=True)
+    assert config.tts_web_server is True
+    assert config.enable_zeroconf is True
+
+
+def test_from_args_none_override_keeps_config_file_value():
+    """None overrides are ignored, so the config file value survives."""
+    import tempfile
+    import json
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+        json.dump(
+            {
+                "audiocpp_uri": "http://example:8080",
+                "tts_web_server": True,
+            },
+            tmp,
+        )
+        path = tmp.name
+
+    # Simulates __main__.py passing `args.flag or None` when the flag is absent.
+    config = Config.from_args(path, tts_web_server=None)
+    assert config.tts_web_server is True
+
 def test_validate_rejects_empty_voices():
     config = Config(audiocpp_uri="http://localhost:8080", tts_voices=[])
     with pytest.raises(ValueError, match="No TTS voices configured"):

@@ -35,11 +35,11 @@ INDEX_HTML = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>wyoming-audiocpp-asr</title>
 <style>
-  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 28rem; }
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 30rem; }
   label { display: block; margin-top: 1rem; }
+  input[type="file"], input[type="text"] { width: 100%; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: 0.5rem 1.25rem; cursor: pointer; }
   #result { margin-top: 1rem; padding: 1rem; background: #f4f4f4; white-space: pre-wrap; min-height: 1.5rem; }
-  button { margin-top: 1rem; }
-  #status { margin-top: 1.5rem; font-size: 0.85rem; color: #555; }
 </style>
 </head>
 <body>

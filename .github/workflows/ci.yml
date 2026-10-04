@@ -19,12 +19,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # ASR distribution (root pyproject.toml); the dev extra pulls in the
-          # web + zeroconf extras and the test tooling (pytest, pytest-asyncio).
+          # Single distribution; dev extra includes the production extras (web,
+          # zeroconf) plus test tooling (pytest, pytest-asyncio).
           python -m pip install -e ".[dev]"
-          # TTS distribution; dev extra for test tooling plus the web extra so
-          # its Flask demo-server tests run (they skip without flask).
-          python -m pip install -e "wyoming_audiocpp_tts/[dev,web]"
 
       - name: Run tests
         # The happy-path e2e tests in tests/test_e2e_bridges.py require a live

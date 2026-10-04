@@ -1,10 +1,11 @@
 # Wyoming audio.cpp Bridges
 
 Wyoming protocol bridges that connect Home Assistant voice assistants to
-[audio.cpp](https://github.com/0xShug0/audio.cpp). Two services share a single
-`config.json`: the **ASR bridge** transcribes speech into text, and the
-**TTS bridge** synthesizes text into speech. Each service ignores the config
-fields it doesn't use.
+[audio.cpp](https://github.com/0xShug0/audio.cpp).
+
+Two services share a single `config.json`: the [**ASR bridge**](#asr-bridge) transcribes
+speech into text, and the [**TTS bridge**](#tts-bridge) synthesizes text into speech. 
+Each service ignores the config fields it doesn't use.
 
 ## Integration with audio.cpp
 
@@ -25,11 +26,11 @@ and emits a single `Transcript` event before disconnecting. One response per req
 
 Config fields (ASR-specific):
 
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `asr_model` | `hviske` | audio.cpp model id for transcription. |
-| `asr_language` | `da` | Language hint; string or list of strings. |
-| `enable_zeroconf` | `false` | Register mDNS `_wyoming._tcp.local.` discovery. |
+| Field             | Default  | Meaning                                         |
+| ----------------- | -------- | ----------------------------------------------- |
+| `asr_model`       | `hviske` | audio.cpp model id for transcription.           |
+| `asr_language`    | `da`     | Language hint; string or list of strings.       |
+| `enable_zeroconf` | `false`  | Register mDNS `_wyoming._tcp.local.` discovery. |
 
 ## TTS Bridge
 
@@ -40,10 +41,10 @@ guarantees `SynthesizeStop` even on upstream failure.
 
 Config fields (TTS-specific):
 
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `tts_voices` | `[omnivoice]` | List of voice objects (model, name, language, speed, options). |
-| `tts_web_server` | `false` | Enable the demo Flask web server. |
+| Field            | Default       | Meaning                                                        |
+| ---------------- | ------------- | -------------------------------------------------------------- |
+| `tts_voices`     | `[omnivoice]` | List of voice objects (model, name, language, speed, options). |
+| `tts_web_server` | `false`       | Enable the demo Flask web server.                              |
 
 ## Docker images
 
@@ -113,10 +114,8 @@ services:
 The devcontainer provides Python 3.14, Node, and the audio.cpp GPU service:
 
 ```bash
-# Editable install (ASR from root, TTS from its directory):
-pip install -e .
-cd wyoming_audiocpp_tts && pip install -e .
-```
+# Editable install (single distribution, both bridges):
+pip install -e ".[dev]"
 
 ### Testing
 
