@@ -30,11 +30,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Cache build layers so the "tag as latest" steps below reuse the image
-      # instead of rebuilding it from scratch.
-      - name: Cache Docker layers
-        uses: docker/cache-action@v3
-
       - name: Build and push ASR image
         uses: docker/build-push-action@v5
         with:
