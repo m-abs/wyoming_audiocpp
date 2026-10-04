@@ -1,35 +1,171 @@
 {
-  "asr_model": "hviske",
   "asr_language": "da",
+  "asr_model": "hviske",
   "asr_uri": "tcp://0.0.0.0:11301",
-  "tts_uri": "tcp://0.0.0.0:11201",
-  "enable_zeroconf": false,
   "asr_web_server": false,
   "asr_web_server_host": "127.0.0.1",
   "asr_web_server_port": 5000,
-  "asr_web_server_allow": null,
-  "tts_web_server": false,
-  "tts_web_server_host": "127.0.0.1",
-  "tts_web_server_port": 5001,
-  "tts_web_server_allow": null,
+  "tts_uri": "tcp://0.0.0.0:11201",
   "tts_voices": [
     {
-      "model": "omnivoice",
-      "name": "Young woman",
       "language": "da",
-      "speed": 1.0,
+      "model": "omnivoice",
+      "name": "Alma",
       "options": {
-        "instruct": "female, young adult"
-      }
+        "guidance_scale": 2,
+        "instruct": "female, child, high pitch"
+      },
+      "seed": 1234,
+      "speed": 1
     },
     {
-      "model": "omnivoice",
-      "name": "Middle-aged man",
       "language": "da",
-      "speed": 1.1,
+      "model": "omnivoice",
+      "name": "Freja",
       "options": {
-        "instruct": "male, moderate pitch, middle-aged"
-      }
+        "guidance_scale": 2,
+        "instruct": "female, child, low pitch"
+      },
+      "seed": 1234,
+      "speed": 1.2
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Ida",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "female, teenager, high pitch"
+      },
+      "seed": 1234,
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Karla",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "female, teenager, moderate pitch"
+      },
+      "seed": 1234,
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Phi",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "female, young adult, moderate pitch"
+      },
+      "seed": 1234,
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Cirkeline",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "female, young adult, very high pitch"
+      },
+      "seed": 1234,
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Ingrid",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "female, elderly, very low pitch"
+      },
+      "seed": 1234,
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Valdemar",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, child, high pitch"
+      },
+      "speed": 1.35
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Magnus",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, child, low pitch"
+      },
+      "speed": 1.1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Mikkel",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, teenager, very high pitch"
+      },
+      "speed": 0.95
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Martin",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, young adult, moderate pitch"
+      },
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Michael",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, young adult, high pitch"
+      },
+      "speed": 1.25
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Birger",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, middle-aged, moderate pitch"
+      },
+      "speed": 1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Otto",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, elderly, high pitch"
+      },
+      "speed": 1.1
+    },
+    {
+      "language": "da",
+      "model": "omnivoice",
+      "name": "Anton",
+      "options": {
+        "guidance_scale": 2,
+        "instruct": "male, elderly, moderate pitch"
+      },
+      "speed": 1.1
     }
-  ]
+  ],
+  "tts_web_server": false,
+  "tts_web_server_host": "127.0.0.1",
+  "tts_web_server_port": 5001
 }
