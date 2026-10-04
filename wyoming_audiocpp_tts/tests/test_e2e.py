@@ -13,7 +13,7 @@ import threading
 import traceback
 from urllib.parse import urlparse
 
-from wyoming_audiocpp_tts.config import Config, VoiceConfig
+from wyoming_audiocpp_tts.config import TtsConfig, VoiceConfig
 from wyoming_audiocpp_tts.server import create_tcp_server
 from wyoming.event import read_event, write_event
 from wyoming.info import Describe
@@ -61,7 +61,7 @@ def _connect(config):
 
 
 def test_describe_returns_info():
-    config = Config(
+    config = TtsConfig(
         tts_voices=[VoiceConfig(model="omnivoice")],
         tts_uri=SERVER_URI,
     )

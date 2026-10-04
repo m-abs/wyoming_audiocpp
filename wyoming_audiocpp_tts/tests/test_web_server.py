@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("flask", reason="requires the 'web' optional dependencies")
 
-from wyoming_audiocpp_tts.config import Config
+from wyoming_audiocpp_tts.config import TtsConfig
 from wyoming_audiocpp_tts.tts_server import create_app
 from wyoming_audiocpp_tts.web_server import (
     AllowListMiddleware,
@@ -21,11 +21,11 @@ from wyoming_audiocpp_tts.web_server import (
 )
 
 
-def _config() -> Config:
-    return Config.from_args(None)
+def _config() -> TtsConfig:
+    return TtsConfig.from_args(None)
 
 
-def _client(config: Config, allow: Optional[List[str]] = None) -> Any:
+def _client(config: TtsConfig, allow: Optional[List[str]] = None) -> Any:
     """Build a test client for the demo UI.
 
     ``make_tts_web_server`` adds the browser routes to the base app; when an

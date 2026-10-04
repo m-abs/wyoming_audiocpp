@@ -25,19 +25,19 @@ TTS_SERVICE_NAME = "wyoming-audiocpp-tts"
 
 
 if TYPE_CHECKING:
-    from .config import Config
+    from .config import TtsConfig
     from .tts_handler import AudioCppTtsEventHandler
-def create_handler(reader, writer, config: "Config") -> "AudioCppTtsEventHandler":
+def create_handler(reader, writer, config: "TtsConfig") -> "AudioCppTtsEventHandler":
     """Wyoming handler factory for ``AsyncServer.run`` / ``AsyncServer.start``."""
     from .tts_handler import AudioCppTtsEventHandler
 
     return AudioCppTtsEventHandler(reader, writer, config)
-def handler_factory(config: "Config"):
+def handler_factory(config: "TtsConfig"):
     """Bind ``config`` into the ``(reader, writer) -> handler`` factory."""
     return partial(create_handler, config=config)
 
 
-async def _run(server: AsyncTcpServer, config: "Config") -> None:
+async def _run(server: AsyncTcpServer, config: "TtsConfig") -> None:
     """Serve TTS until stopped, registering mDNS discovery when enabled.
 
     ``AsyncServer.run`` owns the event loop, so the zeroconf task is created
@@ -56,7 +56,7 @@ async def _run(server: AsyncTcpServer, config: "Config") -> None:
     await server.run(handler_factory(config))
 
 
-def create_tcp_server(config: "Config") -> None:
+def create_tcp_server(config: "TtsConfig") -> None:
     """Run the Wyoming TCP server (blocking; starts the asyncio loop)."""
     server = AsyncServer.from_uri(config.tts_uri)
     asyncio.run(_run(server, config))

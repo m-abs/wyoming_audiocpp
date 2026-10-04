@@ -11,7 +11,7 @@ import pytest
 import wave
 
 from wyoming_audiocpp_tts import __version__, audiocpp_client
-from wyoming_audiocpp_tts.config import Config, VoiceConfig
+from wyoming_audiocpp_tts.config import TtsConfig, VoiceConfig
 from wyoming_audiocpp_tts.tts_handler import AudioCppTtsEventHandler
 
 from wyoming.event import Event
@@ -39,9 +39,9 @@ def build_handler(wav_path, voices=None):
     writer.drain = mock.AsyncMock(return_value=None)
 
     if voices is None:
-        config = Config.from_args(None)
+        config = TtsConfig.from_args(None)
     else:
-        config = Config(tts_voices=voices)
+        config = TtsConfig(tts_voices=voices)
 
     handler = AudioCppTtsEventHandler(reader, writer, config, wav_path=str(wav_path))
 

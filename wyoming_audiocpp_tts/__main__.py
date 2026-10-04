@@ -13,7 +13,7 @@ import argparse
 import logging
 import sys
 
-from .config import Config
+from .config import TtsConfig
 
 from . import __version__
 
@@ -106,7 +106,7 @@ def main(argv=None) -> int:
     )
 
     try:
-        config = Config.from_args(
+        config = TtsConfig.from_args(
             args.config,
             audiocpp_uri=args.audiocpp_uri,
             tts_uri=args.tts_uri,
