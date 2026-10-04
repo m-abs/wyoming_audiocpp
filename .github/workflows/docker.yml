@@ -21,6 +21,14 @@ jobs:
         id: version
         run: |
           VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "${{ github.ref }}" = "refs/heads/rc" ]; then
+            LAST=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://ghcr.io/v2/m-abs/wyoming_audiocpp/asr/tags/list" | \
+              jq -r --arg v "${VERSION}" \
+              '[.tags[] | select(startswith("${v}-rc")) | sub("^${v}-rc", "") | tonumber] | (max // 0)')
+            RC_NUM=$((LAST + 1))
+            VERSION="${VERSION}-rc${RC_NUM}"
+          fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Login to ghcr.io
