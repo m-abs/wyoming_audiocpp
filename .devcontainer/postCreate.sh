@@ -16,5 +16,8 @@ npm i -g @colbymchenry/codegraph
 codegraph init 
 
 npm i -g @kahme247/ompweb
+npm i -g skills@latest
+skills add mattpocock/skills --skill '*' -y
 
 sudo chsh -s $(which zsh) vscode
+

@@ -35,9 +35,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Wyoming TCP service (the default entry point).
     parser.add_argument(
-        "--uri",
-        default="tcp://0.0.0.0:10200",
-        help="Wyoming TCP bind, tcp://host:port (default: tcp://0.0.0.0:10200)",
+        "--tts-uri",
+        default="tcp://0.0.0.0:11201",
+        help="Wyoming TCP bind, tcp://host:port (default: tcp://0.0.0.0:11201)",
     )
     parser.add_argument(
         "--zeroconf",
@@ -109,7 +109,7 @@ def main(argv=None) -> int:
         config = Config.from_args(
             args.config,
             audiocpp_uri=args.audiocpp_uri,
-            uri=args.uri,
+            tts_uri=args.tts_uri,
             enable_zeroconf=args.zeroconf,
             tts_web_server=args.tts_web_server,
             tts_web_server_host=args.tts_web_server_host,
