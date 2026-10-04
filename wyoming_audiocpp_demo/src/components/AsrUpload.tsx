@@ -5,10 +5,8 @@ import { defaults, type Overrides } from "../lib/config";
 
 export function AsrUpload({
   overrides,
-  onChange,
 }: {
   overrides: Overrides;
-  onChange: (o: Overrides) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [model, setModel] = useState("hviske");
@@ -125,36 +123,7 @@ export function AsrUpload({
           </button>
         </div>
       )}
-
-      <OverridesPanel overrides={overrides} onChange={onChange} />
     </section>
   );
 }
 
-function OverridesPanel({
-  overrides,
-  onChange,
-}: {
-  overrides: Overrides;
-  onChange: (o: Overrides) => void;
-}) {
-  return (
-    <fieldset className="flex flex-col gap-2 rounded border border-dashed border-zinc-300 p-3 text-sm dark:border-zinc-700">
-      <legend className="text-xs text-zinc-500">Endpoint overrides</legend>
-      <label className="flex flex-col gap-0.5">
-        <span className="text-zinc-500">ASR base</span>
-        <input
-          className="rounded border border-zinc-300 p-1 dark:border-zinc-700"
-          value={overrides.asrBase}
-          onChange={(e) => onChange({ ...overrides, asrBase: e.target.value })}
-        />
-      </label>
-      <button
-        className="cursor-pointer self-start rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        onClick={() => onChange(defaults)}
-      >
-        Reset
-      </button>
-    </fieldset>
-  );
-}
