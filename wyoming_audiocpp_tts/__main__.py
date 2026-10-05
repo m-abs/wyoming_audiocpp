@@ -78,6 +78,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Log DEBUG messages",
     )
     parser.add_argument(
+        "--log-level",
+        type=str.upper,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default=None,
+        help="Logging level (default: INFO; supersedes --debug)",
+    )
+    parser.add_argument(
         "--log-format",
         default=logging.BASIC_FORMAT,
         help="Format for log messages",
@@ -100,8 +107,13 @@ def parse_args(argv=None) -> argparse.Namespace:
 def main(argv=None) -> int:
     args = parse_args(argv)
 
+    level = (
+        getattr(logging, args.log_level)
+        if args.log_level
+        else logging.DEBUG if args.debug else logging.INFO
+    )
     logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
+        level=level,
         format=args.log_format,
     )
 
@@ -119,6 +131,8 @@ def main(argv=None) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    if config.log_level and not args.log_level:
+        logging.getLogger().setLevel(getattr(logging, config.log_level))
     logging.getLogger("wyoming_audiocpp_tts").info("Wyoming %s | audio.cpp %s", config.tts_uri, config.audiocpp_uri)
     # Optional demo web server, in a background thread, started before the
     # Wyoming server: it only reads config, and a missing dependency or a bad

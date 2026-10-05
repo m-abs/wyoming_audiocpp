@@ -15,7 +15,11 @@
         "audio.cpp": true
     },
     "cSpell.words": [
+        "devcontainers",
         "GGUF",
-        "omnivoice"
+        "joshuanianji",
+        "michidk",
+        "omnivoice",
+        "stuartleeks"
     ]
 }

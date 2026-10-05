@@ -90,6 +90,8 @@ class BridgeConfig:
 
     enable_zeroconf: bool = False
     """Whether to register mDNS ``_wyoming._tcp.local.`` discovery."""
+    log_level: Optional[str] = None
+    """Logging level name (DEBUG, INFO, WARNING, ERROR, CRITICAL). ``None`` uses the default (INFO)."""
 
     def endpoint(self, path: str) -> str:
         """Join the base URI and an endpoint path into a full URL.
@@ -174,3 +176,7 @@ class BridgeConfig:
             raise ValueError(
                 f"audiocpp_uri scheme must be http or https: {self.audiocpp_uri}"
             )
+        if self.log_level is not None:
+            self.log_level = self.log_level.upper()
+            if self.log_level not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+                raise ValueError(f"log_level must be DEBUG, INFO, WARNING, ERROR, or CRITICAL: {self.log_level}")

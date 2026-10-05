@@ -10,11 +10,14 @@ kept free of Wyoming-specific code so it can be tested without a running server.
 from __future__ import annotations
 
 import struct
-import sys
 from dataclasses import dataclass
 from typing import Any, List
 
+import logging
+
 import requests
+
+_logger = logging.getLogger("wyoming_audiocpp_tts")
 
 
 @dataclass(frozen=True)
@@ -91,17 +94,26 @@ def text_to_speech(
     """
     body = voice.request_body(text)
 
+    _logger.debug(
+        "TTS request: endpoint=%s body=%s",
+        endpoint,
+        body,
+    )
     try:
         response = requests.post(endpoint, json=body, timeout=timeout)
         response.raise_for_status()
     except requests.exceptions.RequestException as exc:
-        print(
-            f"audio.cpp TTS request failed: {exc}\n"
-            f"  url: {endpoint}\n"
-            f"  body: {body}",
-            file=sys.stderr,
+        _logger.error(
+            "audio.cpp TTS request failed: %s\n  url: %s\n  body: %s",
+            exc,
+            endpoint,
+            body,
         )
         raise
+    _logger.debug(
+        "TTS response: audio_size=%d",
+        len(response.content),
+    )
     return response.content
 
 
@@ -123,15 +135,20 @@ def synthesize(
     """
     body = voice.request_body(text)
 
+    _logger.debug(
+        "Synthesize request: endpoint=%s body=%s",
+        endpoint,
+        body,
+    )
     try:
         response = requests.post(endpoint, json=body, timeout=timeout)
         response.raise_for_status()
     except requests.exceptions.RequestException as exc:
-        print(
-            f"audio.cpp synthesize request failed: {exc}\n"
-            f"  url: {endpoint}\n"
-            f"  body: {body}",
-            file=sys.stderr,
+        _logger.error(
+            "audio.cpp synthesize request failed: %s\n  url: %s\n  body: %s",
+            exc,
+            endpoint,
+            body,
         )
         raise
 
@@ -142,5 +159,12 @@ def synthesize(
     # Split into 4 KB chunks so the handler can pace them to real-time.
     chunk_size = 4096
     chunks = [pcm[i : i + chunk_size] for i in range(0, len(pcm), chunk_size)]
+
+    _logger.debug(
+        "Synthesize response: format=%s pcm_size=%d chunks=%d",
+        fmt,
+        len(pcm),
+        len(chunks),
+    )
 
     return fmt, chunks

@@ -60,7 +60,8 @@
 		},
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": [
-				"vim"
+				"vim",
+				"moreutils"
 			]
 		},
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
