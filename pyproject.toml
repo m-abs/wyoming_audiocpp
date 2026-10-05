@@ -1,14 +1,14 @@
 [project]
-name = "wyoming-audiocpp-asr"
-version = "0.1.0"
-description = "Wyoming protocol ASR service bridging to audio.cpp"
+name = "wyoming-audiocpp"
+version = "0.2.0"
+description = "Wyoming protocol ASR and TTS services bridging to audio.cpp"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "CoRal / Alexandra Institute"},
+    {name = "Morten Sjøgren <m_abs@mabs.dk>"},
 ]
-keywords = ["wyoming", "asr", "audio.cpp", "voice"]
+keywords = ["wyoming", "asr", "tts", "audio.cpp", "voice"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -33,11 +33,19 @@ zip-safe = true
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["wyoming_audiocpp_asr", "wyoming_audiocpp_asr.tests"]
-exclude = ["tests", "wyoming_audiocpp_asr.tests.*.tests"]
+include = [
+    "wyoming_audiocpp_asr*",
+    "wyoming_audiocpp_tts*",
+]
+exclude = [
+    "tests",
+    "wyoming_audiocpp_asr.tests.*.tests",
+    "wyoming_audiocpp_tts.tests.*.tests",
+]
 
 [project.scripts]
 wyoming-audiocpp-asr = "wyoming_audiocpp_asr.__main__:main"
+wyoming-audiocpp-tts = "wyoming_audiocpp_tts.__main__:main"
 
 [build-system]
 requires = ["setuptools>=78,<81", "wheel"]
@@ -67,6 +75,6 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "requests",
-    "wyoming-audiocpp-asr[web]",
-    "wyoming-audiocpp-asr[zeroconf]",
+    "wyoming-audiocpp[web]",
+    "wyoming-audiocpp[zeroconf]",
 ]

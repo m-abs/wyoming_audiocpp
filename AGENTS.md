@@ -3,12 +3,12 @@
 ## Project Overview
 
 Monorepo of **Wyoming protocol** bridges (Home Assistant voice assistant) to
-[audio.cpp](https://github.com/0xShug0/audio.cpp). Two in-scope Python
-distributions each translate the Wyoming event protocol into audio.cpp's
+[audio.cpp](https://github.com/0xShug0/audio.cpp). One in-scope Python
+distribution translates the Wyoming event protocol into audio.cpp's
 OpenAI-compatible HTTP endpoints, plus a Next.js 16 browser playground:
 
-- `wyoming_audiocpp_asr` — ASR bridge; default bind `tcp://0.0.0.0:55001`.
-- `wyoming_audiocpp_tts` — TTS bridge; default bind `tcp://0.0.0.0:10200`.
+- `wyoming_audiocpp_asr` — ASR bridge; default bind `tcp://0.0.0.0:11301`.
+- `wyoming_audiocpp_tts` — TTS bridge; default bind `tcp://0.0.0.0:11201`.
 
 > **Scope note:** `references/wyoming-faster-whisper/`, `references/wyoming-piper/`
 > and `references/audio.cpp/` are **reference projects only** — not project source.
@@ -55,8 +55,8 @@ bytes). TTS uses the `wyoming` package's server directly (no local wire module).
 
 | Path | Purpose |
 | --- | --- |
-| `wyoming_audiocpp_asr/` | ASR bridge package (root `pyproject.toml` = this dist) |
-| `wyoming_audiocpp_tts/` | TTS bridge package (own `pyproject.toml`) |
+|`wyoming_audiocpp_asr/`|ASR bridge package|
+|`wyoming_audiocpp_tts/`|TTS bridge package|
 | `wyoming_audiocpp_demo/` | Next.js 16 playground + in-process mock bridges |
 | `tests/` | Root e2e suite (`test_e2e_bridges.py`) |
 | `test_data/` | CC0 sample WAVs + transcript labels (deliberately non-canonical) |
@@ -91,14 +91,13 @@ Run **all** Python via `.venv/bin/python` from the repo root — never system
 python. The workspace is a devcontainer at `/workspaces`.
 
 ```bash
-# Install (two separate distributions)
-pip install -e .                        # ASR -> console script wyoming-audiocpp-asr; extras [web] [zeroconf] [dev]
-cd wyoming_audiocpp_tts && pip install -e .   # TTS -> wyoming-audiocpp-tts; extras [dev] [web] (no zeroconf)
+# Editable install (single distribution, both bridges):
+.venv/bin/python -m pip install -e ".[dev]"
 
 # Run the bridges (Wyoming TCP services)
-.venv/bin/python -m wyoming_audiocpp_asr --uri tcp://0.0.0.0:55001 \
+.venv/bin/python -m wyoming_audiocpp_asr --asr-uri tcp://0.0.0.0:11301 \
     --audiocpp-uri http://audio.cpp:8080 --model hviske --language da [--zeroconf] [--web-server]
-.venv/bin/python -m wyoming_audiocpp_tts --uri tcp://0.0.0.0:10200 \
+.venv/bin/python -m wyoming_audiocpp_tts --tts-uri tcp://0.0.0.0:11201 \
     --tts-voice0-model omnivoice [--tts-voice0-extra-seed 42] [--zeroconf] [--web-server]
 
 # Tests (pytest, asyncio_mode=auto)
@@ -111,9 +110,9 @@ cd wyoming_audiocpp_demo && npm install && npx playwright install chromium
 .venv/bin/python wyoming_audiocpp_demo/tests/smoke.py   # from repo root; auto-falls back to mock bridges
 ```
 
-Lint/format is configured **per distribution** in each `pyproject.toml`
+Lint/format is configured in the root `pyproject.toml`
 (`[tool.black]` line-length 88, `[tool.isort] profile="black"`); flake8 via the
-`dev` extra. There is no repo-wide formatter config.
+`dev` extra.
 
 ## Code Conventions & Common Patterns
 
@@ -156,7 +155,7 @@ Lint/format is configured **per distribution** in each `pyproject.toml`
   `wyoming_audiocpp_tts/audiocpp_client.py`.
 - **HTTP demo bridges:** `wyoming_audiocpp_asr/asr_server.py`,
   `wyoming_audiocpp_tts/tts_server.py`; **web servers:** `.../web_server.py`.
-- **Packaging:** root `pyproject.toml` (ASR dist), `wyoming_audiocpp_tts/pyproject.toml` (TTS dist).
+- **Packaging:** single root `pyproject.toml` (both bridges as one distribution).
 - **Config example / debug:** `config.example.json`, `.vscode/launch.json`
   (debug configs use `--uri`, matching current code).
 
@@ -190,14 +189,6 @@ Lint/format is configured **per distribution** in each `pyproject.toml`
 
 ### Known staleness (verify before relying on docs/tests)
 
-- `tests/test_e2e_bridges.py` and the README TTS section still pass
-  `--host/--port`, but the current `wyoming_audiocpp_tts/__main__.py` is a
-  Wyoming TCP service taking **`--uri`** (`.vscode/launch.json` matches code).
-  The e2e test will fail on argparse as written.
-- README says "editable install from the project root creates the
-  `wyoming-audiocpp-tts` console script" — **stale**: the root `pyproject.toml`
-  defines only the ASR dist; TTS must be installed from
-  `wyoming_audiocpp_tts/`. Confirm with `pip show wyoming-audiocpp-tts`.
 - No in-scope `CHANGELOG.md` exists (only reference impls have them); the de-facto
   record is `README.md` + dated docs under `.agents/plans/` and `.agents/review/`.
 

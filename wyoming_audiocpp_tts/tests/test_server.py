@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from wyoming_audiocpp_tts import audiocpp_client
-from wyoming_audiocpp_tts.config import Config, VoiceConfig
+from wyoming_audiocpp_tts.config import TtsConfig, VoiceConfig
 from wyoming_audiocpp_tts.tts_server import create_app
 
 MODEL = "omnivoice"
@@ -13,7 +13,7 @@ NAME = "female"
 LANGUAGE = "da"
 
 
-def build_client(config: Config):
+def build_client(config: TtsConfig):
     return create_app(config).test_client()
 
 
@@ -24,8 +24,8 @@ def post_text(client, body, **params):
 
 def _config(voices=None):
     if voices is None:
-        return Config.from_args(None)
-    return Config(tts_voices=voices)
+        return TtsConfig.from_args(None)
+    return TtsConfig(tts_voices=voices)
 
 
 def test_success_passes_args_and_shapes_response():

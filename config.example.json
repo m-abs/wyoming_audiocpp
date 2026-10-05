@@ -1,8 +1,9 @@
 {
   "audiocpp_uri": "http://localhost:8080",
   "asr_model": "hviske",
-  "asr_language": "da",
-  "uri": "tcp://0.0.0.0:55001",
+  "asr_language": ["da", "en"],
+  "asr_uri": "tcp://0.0.0.0:11301",
+  "tts_uri": "tcp://0.0.0.0:11201",
   "enable_zeroconf": false,
   "asr_web_server": false,
   "asr_web_server_host": "127.0.0.1",

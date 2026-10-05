@@ -32,7 +32,7 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.tts import Synthesize, SynthesizeChunk, SynthesizeStart, SynthesizeStop, SynthesizeStopped
 
 if TYPE_CHECKING:
-    from .config import Config
+    from .config import TtsConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class Voice:
 class AudioCppTtsEventHandler(AsyncEventHandler):
     """Wyoming TTS event handler that bridges to audio.cpp."""
 
-    def __init__(self, reader, writer, config: "Config", wav_path: Optional[str] = None) -> None:
+    def __init__(self, reader, writer, config: "TtsConfig", wav_path: Optional[str] = None) -> None:
         super().__init__(reader, writer)
         self.config = config
         self._wav_path = wav_path or os.path.join(tempfile.gettempdir(), "audio.cpp-tts.wav")

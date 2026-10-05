@@ -13,7 +13,7 @@ import argparse
 import logging
 import sys
 
-from .config import Config
+from .config import TtsConfig
 
 from . import __version__
 
@@ -35,9 +35,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Wyoming TCP service (the default entry point).
     parser.add_argument(
-        "--uri",
-        default="tcp://0.0.0.0:10200",
-        help="Wyoming TCP bind, tcp://host:port (default: tcp://0.0.0.0:10200)",
+        "--tts-uri",
+        default="tcp://0.0.0.0:11201",
+        help="Wyoming TCP bind, tcp://host:port (default: tcp://0.0.0.0:11201)",
     )
     parser.add_argument(
         "--zeroconf",
@@ -106,12 +106,12 @@ def main(argv=None) -> int:
     )
 
     try:
-        config = Config.from_args(
+        config = TtsConfig.from_args(
             args.config,
             audiocpp_uri=args.audiocpp_uri,
-            uri=args.uri,
-            enable_zeroconf=args.zeroconf,
-            tts_web_server=args.tts_web_server,
+            tts_uri=args.tts_uri,
+            enable_zeroconf=args.zeroconf or None,
+            tts_web_server=args.tts_web_server or None,
             tts_web_server_host=args.tts_web_server_host,
             tts_web_server_port=args.tts_web_server_port,
             tts_web_server_allow=args.tts_web_server_allow,
@@ -119,11 +119,11 @@ def main(argv=None) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-
+    logging.getLogger("wyoming_audiocpp_tts").info("Wyoming %s | audio.cpp %s", config.tts_uri, config.audiocpp_uri)
     # Optional demo web server, in a background thread, started before the
     # Wyoming server: it only reads config, and a missing dependency or a bad
     # port should fail now rather than after the wait.
-    if args.tts_web_server:
+    if config.tts_web_server:
         try:
             from . import tts_server, web_server
             from .web_server import make_tts_web_server, parse_allow_list, run_web_server
@@ -131,7 +131,7 @@ def main(argv=None) -> int:
             print(f"error: --tts-web-server requires the 'web' optional dependencies ({err})", file=sys.stderr)
             return 2
 
-        if args.tts_web_server_allow:
+        if config.tts_web_server_allow:
             try:
                 parse_allow_list(args.tts_web_server_allow)
             except ValueError as exc:

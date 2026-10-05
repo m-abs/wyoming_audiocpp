@@ -12,7 +12,7 @@ from .config import (
     DEFAULT_URI,
     DEFAULT_WEB_SERVER_HOST,
     DEFAULT_WEB_SERVER_PORT,
-    Config,
+    AsrConfig,
 )
 from .server import create_tcp_server
 
@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to config.json (default: config.json)",
     )
     parser.add_argument(
-        "--uri",
+        "--asr-uri",
         default=DEFAULT_URI,
         help="Wyoming TCP bind uri, tcp://host:port (default: %(default)s)",
     )
@@ -97,20 +97,20 @@ def main(argv=None) -> None:
         format=args.log_format,
     )
 
-    config = Config.from_args(
+    config = AsrConfig.from_args(
         args.config,
-        uri=args.uri,
+        asr_uri=args.asr_uri,
         audiocpp_uri=args.audiocpp_uri,
-        enable_zeroconf=args.zeroconf,
-        asr_web_server=args.asr_web_server,
+        enable_zeroconf=args.zeroconf or None,
+        asr_web_server=args.asr_web_server or None,
         asr_web_server_host=args.asr_web_server_host,
         asr_web_server_port=args.asr_web_server_port,
         asr_web_server_allow=args.asr_web_server_allow or None,
     )
-
+    logging.getLogger("wyoming_audiocpp_asr").info("Wyoming %s | audio.cpp %s", config.asr_uri, config.audiocpp_uri)
     # Demo web server first: a missing 'web' install or an unavailable port
     # should fail now, before the Wyoming server starts.
-    if args.asr_web_server:
+    if config.asr_web_server:
         try:
             from .web_server import make_asr_web_server, parse_allow_list, run_web_server
         except ImportError as err:

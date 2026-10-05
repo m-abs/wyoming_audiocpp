@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "compounds": [
         {
-            "name": "All",
+            "name": "Launch all",
             "configurations": [
                 "Wyoming ASR",
                 "Wyoming TTS",
@@ -17,17 +17,8 @@
             "request": "launch",
             "module": "wyoming_audiocpp_asr",
             "args": [
-                "--uri",
-                "tcp://0.0.0.0:55001",
-                "--asr-web-server",
-                "--asr-web-server-host",
-                "0.0.0.0",
-                "--asr-web-server-port",
-                "5000",
-                "--audiocpp-uri",
-                "http://audio.cpp:8080",
                 "--config",
-                "config.example.json"
+                "config.devcontainer.json"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",
@@ -40,17 +31,8 @@
             "request": "launch",
             "module": "wyoming_audiocpp_tts",
             "args": [
-                "--uri",
-                "tcp://0.0.0.0:10200",
-                "--tts-web-server",
-                "--tts-web-server-host",
-                "0.0.0.0",
-                "--tts-web-server-port",
-                "5001",
-                "--audiocpp-uri",
-                "http://audio.cpp:8080",
                 "--config",
-                "config.example.json"
+                "config.devcontainer.json"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",

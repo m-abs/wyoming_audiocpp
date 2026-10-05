@@ -13,7 +13,7 @@ from wyoming.info import Describe, Info
 
 from wyoming_audiocpp_asr import audiocpp_client
 from wyoming_audiocpp_asr.asr_handler import AudioCppAsrEventHandler, build_asr_info
-from wyoming_audiocpp_asr.config import Config
+from wyoming_audiocpp_asr.config import AsrConfig
 
 MODEL = "hviske"
 
@@ -21,8 +21,8 @@ _CHUNK = AudioChunk(rate=16000, width=2, channels=1, audio=b"\x00" * 160).event(
 _START = AudioStart(rate=16000, width=2, channels=1).event()
 
 
-def _config(**overrides) -> Config:
-    return Config.from_args(None, asr_model=MODEL, **overrides)
+def _config(**overrides) -> AsrConfig:
+    return AsrConfig.from_args(None, asr_model=MODEL, **overrides)
 
 
 class _Writer:

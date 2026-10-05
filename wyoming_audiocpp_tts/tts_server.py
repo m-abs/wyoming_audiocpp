@@ -19,7 +19,7 @@ import logging
 from flask import Flask, Response, jsonify, request
 
 from . import audiocpp_client
-from .config import Config, VoiceConfig
+from .config import TtsConfig, VoiceConfig
 
 logger = logging.getLogger("wyoming_audiocpp_tts")
 
@@ -35,7 +35,7 @@ def _find_voice(voices: list[VoiceConfig], name: str | None) -> VoiceConfig:
     return voices[0]
 
 
-def create_app(config: Config) -> Flask:
+def create_app(config: TtsConfig) -> Flask:
     """Build the Flask application."""
     app = Flask("wyoming_audiocpp_tts")
     app.config["TTS_ENDPOINT"] = config.tts_endpoint

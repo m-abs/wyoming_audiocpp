@@ -22,7 +22,7 @@ from . import tts_server
 if TYPE_CHECKING:
     from flask import Flask
 
-    from .config import Config
+    from .config import TtsConfig
 
 
 TTS_SERVICE_NAME = "wyoming-audiocpp-tts"
@@ -32,57 +32,63 @@ logger = logging.getLogger(__name__)
 
 def _render_index() -> str:
     """Return the HTML page with a text area, voice dropdown, and a Synthesize button."""
-    return (
-        "<html lang=\"en\">\n"
-        "<head>\n"
-        "  <meta charset=\"utf-8\">\n"
-        "  <title>Wyoming audio.cpp TTS</title>\n"
-        "  <style>\n"
-        "    body { font-family: sans-serif; margin: 2rem; }\n"
-        "    textarea { width: 100%; height: 12rem; }\n"
-        "    button { padding: 0.5rem 1rem; }\n"
-        "    select { margin: 0.5rem 0; }\n"
-        "  </style>\n"
-        "</head>\n"
-        "<body>\n"
-        "  <h1>Wyoming audio.cpp TTS</h1>\n"
-        "  <textarea id=\"text\" placeholder=\"Enter text to synthesize\"></textarea>\n"
-        "  <br>\n"
-        "  <label for=\"voice\">Voice:</label>\n"
-        "  <select id=\"voice\"></select>\n"
-        "  <br>\n"
-        "  <button onclick=\"synthesize()\">Synthesize</button>\n"
-        "  <audio id=\"player\" controls></audio>\n"
-        "  <script>\n"
-        "    fetch('/api/voices').then(r => r.json()).then(data => {\n"
-        "      const select = document.getElementById('voice');\n"
-        "      data.voices.forEach(v => {\n"
-        "        const opt = document.createElement('option');\n"
-        "        opt.value = v.name;\n"
-        "        opt.textContent = v.name + ' (' + v.model + ')';\n"
-        "        select.appendChild(opt);\n"
-        "      });\n"
-        "    });\n"
-        "    async function synthesize() {\n"
-        "      const text = document.getElementById('text').value;\n"
-        "      const voice = document.getElementById('voice').value;\n"
-        "      const resp = await fetch('/api/tts', {\n"
-        "        method: 'POST',\n"
-        "        headers: {'Content-Type': 'application/json'},\n"
-        "        body: JSON.stringify({text: text, voice: voice}),\n"
-        "      });\n"
-        "      if (!resp.ok) { alert('Error: ' + resp.statusText); return; }\n"
-        "      const blob = await resp.blob();\n"
-        "      const url = URL.createObjectURL(blob);\n"
-        "      document.getElementById('player').src = url;\n"
-        "    }\n"
-        "  </script>\n"
-        "</body>\n"
-        "</html>\n"
-    )
+    return """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wyoming-audiocpp-tts</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 30rem; }
+  label { display: block; margin-top: 1rem; }
+  textarea { width: 100%; height: 12rem; box-sizing: border-box; }
+  select { margin-top: 0.5rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1.25rem; cursor: pointer; }
+  audio { display: block; margin-top: 1rem; width: 100%; }
+</style>
+</head>
+<body>
+<h1>audio.cpp TTS</h1>
+<form id="form">
+  <label>Text<textarea id="text" name="text" placeholder="Enter text to synthesize"></textarea></label>
+  <label>Voice<select id="voice" name="voice"></select></label>
+  <button type="submit">Synthesize</button>
+</form>
+<audio id="player" controls></audio>
+<script>
+fetch('/api/voices').then(r => r.json()).then(data => {
+  const select = document.getElementById('voice');
+  data.voices.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = v.name + ' (' + v.model + ')';
+    select.appendChild(opt);
+  });
+});
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = document.getElementById("text").value;
+  const voice = document.getElementById("voice").value;
+  try {
+    const resp = await fetch('/api/tts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text, voice: voice}),
+    });
+    if (!resp.ok) { alert('Error: ' + resp.statusText); return; }
+    const blob = await resp.blob();
+    document.getElementById("player").src = URL.createObjectURL(blob);
+  } catch (err) {
+    alert('Request failed: ' + err);
+  }
+});
+</script>
+</body>
+</html>
+"""
 
 
-def make_tts_web_server(config: "Config", flask_app: "Flask") -> "Flask":
+def make_tts_web_server(config: "TtsConfig", flask_app: "Flask") -> "Flask":
     """Add browser routes to the existing Flask app."""
     from flask import Response, jsonify
 

@@ -61,17 +61,18 @@ def main() -> None:
 
 
 def _smoke(page, *, real=False) -> None:
-    # The playground currently renders an empty model list. Verify the ASR
-    # bridge independently, then leave the known empty <select> untouched.
-    models = page.evaluate(
+    # The ASR bridge exposes the configured languages via /api/info; the demo's
+    # language field is populated from this. Verify the structure returns them.
+    langs = page.evaluate(
         "async () => {"
         "try { const r = await fetch('http://localhost:11301/api/info');"
-        "const j = await r.json(); return (j.asr ?? []).map(m => m.name).filter(Boolean);"
+        "const j = await r.json();"
+        "return (j?.asr?.[0]?.models?.[0]?.languages ?? []);"
         "} catch { return []; }"
         "}"
     )
-    print("[smoke] ASR models:", models)
-    assert models, "ASR bridge returned no models"
+    print("[smoke] ASR languages:", langs)
+    assert langs, "ASR bridge returned no languages"
 
     # The bridge's TTS POST is tested with Python requests because the real
     # bridge intentionally exposes only the origin header, not POST preflight
@@ -91,7 +92,7 @@ def _smoke(page, *, real=False) -> None:
     assert wav_ok["ok"] and wav_ok["isWav"] and wav_ok["bytes"] > 44
 
     page.fill("textarea", "hej")
-    page.click("button:has-text('Play')")
+    page.click("button:has-text('Synthesize')")
     page.wait_for_function("document.querySelector('button').disabled === false")
 
     wav = os.path.join(REPO, "test_data", "RMHL20190028_000013.wav")
@@ -103,8 +104,13 @@ def _smoke(page, *, real=False) -> None:
         # reject it, which is the documented degraded real-upstream behavior.
         print("[smoke] ASR fixture rejected by real upstream; tolerated")
     else:
-        assert page.locator("textarea[readonly]").count() == 1
-        assert page.locator("textarea[readonly]").input_value()
+        # New UI: transcripts land in a history list (audio + text + timestamp +
+        # processing time) rather than a readonly textarea.
+        asr_section = page.locator("section:has(h2:text('Speech-to-text'))")
+        assert asr_section.locator(".break-words").count() == 1, "no ASR history entry"
+        txt = asr_section.locator(".break-words").first.text_content()
+        assert txt and txt != "(empty)", "ASR history entry has no transcript"
+        assert asr_section.locator("audio").count() >= 1, "history entry missing audio"
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import { config } from "./config";
 const TTS_PATH = "/api/tts";
 const VOICES_PATH = "/api/voices";
 const ASR_PATH = "/api/speech-to-text";
+const ASR_INFO_PATH = "/api/info";
 
 const getOrigin = (base: string) => {
   try {
@@ -41,18 +42,16 @@ async function getVoices(): Promise<{ name: string; model: string }[]> {
 }
 
 // ASR: POST WAV (multipart field `file`, filename audio.wav, type audio/wav) → { text, language }.
-// Optional ?language and ?model query params.
+// Optional ?language query param.
 async function speechToText(
   file: File,
   language?: string,
-  model?: string,
 ): Promise<{ text: string; language?: string }> {
   const o = getOrigin(config.asrBase);
   const formData = new FormData();
   formData.append("file", file, "audio.wav"); // field name MUST be `file`
   const q = new URLSearchParams();
   if (language) q.set("language", language);
-  if (model) q.set("model", model);
   const res = await fetch(`${o}${ASR_PATH}?${q.toString()}`, {
     method: "POST",
     body: formData,
@@ -61,8 +60,19 @@ async function speechToText(
   return res.json();
 }
 
+// ASR info: GET /api/info → { asr: [{ models: [{ languages: string[] }] }] }.
+// Returns the configured language codes for the single ASR model.
+async function getAsrLanguages(): Promise<string[]> {
+  const o = getOrigin(config.asrBase);
+  const res = await fetch(`${o}${ASR_INFO_PATH}`);
+  if (!res.ok) throw new Error(`ASR info: ${res.statusText}`);
+  const data = await res.json();
+  return data?.asr?.[0]?.models?.[0]?.languages ?? [];
+}
+
 export const api = {
   textToSpeech,
   getVoices,
   speechToText,
+  getAsrLanguages,
 };

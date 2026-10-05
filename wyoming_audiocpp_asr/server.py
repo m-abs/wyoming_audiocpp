@@ -18,30 +18,30 @@ from functools import partial
 from wyoming.server import AsyncServer, AsyncTcpServer
 
 from .asr_handler import AudioCppAsrEventHandler
-from .config import Config
+from .config import AsrConfig
 
 logger = logging.getLogger("wyoming_audiocpp_asr")
 
 ASR_SERVICE_NAME = "wyoming-audiocpp-asr"
 
 
-def create_handler(reader, writer, config: Config) -> AudioCppAsrEventHandler:
+def create_handler(reader, writer, config: AsrConfig) -> AudioCppAsrEventHandler:
     """Wyoming handler factory for ``AsyncServer.run`` / ``AsyncServer.start``."""
     return AudioCppAsrEventHandler(reader, writer, config)
 
 
-def handler_factory(config: Config):
+def handler_factory(config: AsrConfig):
     """Bind ``config`` into the ``(reader, writer) -> handler`` factory."""
     return partial(create_handler, config=config)
 
 
-def zeroconf_name(config: Config) -> str:
+def zeroconf_name(config: AsrConfig) -> str:
     """mDNS service name: URI host if set, else default."""
     host, _ = config.parse_tcp_uri()
     return host if host and host != "0.0.0.0" else ASR_SERVICE_NAME
 
 
-async def _register_zeroconf(server: AsyncTcpServer, config: Config) -> None:
+async def _register_zeroconf(server: AsyncTcpServer, config: AsrConfig) -> None:
     """Register mDNS discovery for ``server`` inside the event loop.
 
     Awaiting ``register_server()`` before serving is deterministic: if the
@@ -59,15 +59,15 @@ async def _register_zeroconf(server: AsyncTcpServer, config: Config) -> None:
     logger.debug("Zeroconf discovery enabled")
 
 
-async def _run(server: AsyncTcpServer, config: Config) -> None:
+async def _run(server: AsyncTcpServer, config: AsrConfig) -> None:
     if config.enable_zeroconf:
         await _register_zeroconf(server, config)
     await server.run(handler_factory(config))
 
 
-def create_tcp_server(config: Config) -> None:
+def create_tcp_server(config: AsrConfig) -> None:
     """Run the Wyoming TCP server (blocking; starts the asyncio loop)."""
-    server = AsyncServer.from_uri(config.uri)
+    server = AsyncServer.from_uri(config.asr_uri)
     if config.enable_zeroconf and not isinstance(server, AsyncTcpServer):
         raise ValueError("Zeroconf requires tcp:// uri")
     asyncio.run(_run(server, config))
