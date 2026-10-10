@@ -13,3 +13,4 @@ wyoming-faster-whisper
 references
 .agents/skills/
 *lock.json
+example/models/
