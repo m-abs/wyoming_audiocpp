@@ -1,0 +1,55 @@
+# Wyoming audio.cpp bridges + audio.cpp backend.
+#
+#   docker compose up -d
+#
+# Models live in ./models on the host and are mounted at /app/models inside the
+# audio.cpp container, which is the path server.json refers to.
+services:
+  audiocpp:
+    image: ghcr.io/0xshug0/audio.cpp:full-cuda12
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Writable so the WebUI/model manager can download packages; use :ro for a fixed set.
+      - ./models:/app/models
+      - ./server.json:/app/server.json:ro
+    command: ["server", "--config", "/app/server.json"]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # No GPU: use `ghcr.io/0xshug0/audio.cpp:full-cpu`, drop the deploy block,
+    # and set "backend": "cpu" in server.json.
+
+  asr:
+    image: ghcr.io/m-abs/wyoming_audiocpp/asr:latest
+    restart: unless-stopped
+    ports:
+      - "11301:11301"
+    volumes:
+      - ./config.json:/config/config.json:ro
+    depends_on:
+      - audiocpp
+
+  tts:
+    image: ghcr.io/m-abs/wyoming_audiocpp/tts:latest
+    restart: unless-stopped
+    ports:
+      - "11201:11201"
+    volumes:
+      - ./config.json:/config/config.json:ro
+    depends_on:
+      - audiocpp

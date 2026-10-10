@@ -1,0 +1,33 @@
+{
+  "audiocpp_uri": "http://audiocpp:8080",
+  "enable_zeroconf": false,
+  "log_level": "INFO",
+
+  "asr_uri": "tcp://0.0.0.0:11301",
+  "asr_model": "hviske",
+  "asr_language": ["da", "en"],
+  "asr_web_server": false,
+
+  "tts_uri": "tcp://0.0.0.0:11201",
+  "tts_voices": [
+    {
+      "model": "omnivoice",
+      "name": "Alma",
+      "language": "da",
+      "speed": 1.0,
+      "options": {
+        "instruct": "female, low pitch"
+      }
+    },
+    {
+      "model": "omnivoice",
+      "name": "Male voice",
+      "language": "da",
+      "speed": 1.1,
+      "options": {
+        "instruct": "male"
+      }
+    }
+  ],
+  "tts_web_server": false
+}

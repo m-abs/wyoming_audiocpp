@@ -1,46 +1,100 @@
 # Wyoming audio.cpp Bridges
 
-Wyoming protocol bridges that connect Home Assistant voice assistants to
-[audio.cpp](https://github.com/0xShug0/audio.cpp).
+Use [audio.cpp](https://github.com/0xShug0/audio.cpp) as the speech recognition
+and text-to-speech engine for Home Assistant Voice. These bridges connect
+audio.cpp to Home Assistant over the [Wyoming protocol](https://www.home-assistant.io/integrations/wyoming/),
+the same way the Whisper and Piper voice services do.
 
-Two services share a single `config.json`: the [**ASR bridge**](#asr-bridge) transcribes
-speech into text, and the [**TTS bridge**](#tts-bridge) synthesizes text into speech.
+One distribution ships two services, sharing a single `config.json`:
 
-## Integration with audio.cpp
+- the [**ASR bridge**](#asr-bridge) turns speech into text
+- the [**TTS bridge**](#tts-bridge) turns text into speech
 
-[audio.cpp](https://github.com/0xShug0/audio.cpp) is a high-performance C++ audio inference framework built on top of ggml, designed to make modern local audio models practical, portable, and fast.
+Point the Home Assistant **Wyoming Protocol** integration at the bridge's host
+and port. See [docs/integration.md](docs/integration.md) for the event flows and
+wire format.
 
-See [docs/integration.md](docs/integration.md) for the full protocol details,
-event flows, and wire format.
+## About audio.cpp
+
+[audio.cpp](https://github.com/0xShug0/audio.cpp) is a high-performance C++ audio
+inference framework built on top of `ggml`, designed to make modern local audio
+models practical, portable, and fast. These bridges only need its
+OpenAI-compatible HTTP endpoints; see the upstream repository for the models,
+backends, and tooling it supports.
 
 ## ASR Bridge
 
-The ASR bridge speaks the Wyoming ASR protocol over TCP (default
-`tcp://0.0.0.0:11301`, config field `asr_uri`). It buffers the utterance as
-16-bit / 16 kHz mono PCM, calls `POST /v1/audio/transcriptions` on `AudioStop`,
-and emits a single `Transcript` event before disconnecting. One response per request.
-
-Config fields (ASR-specific):
-
-| Field             | Default  | Meaning                                         |
-| ----------------- | -------- | ----------------------------------------------- |
-| `asr_model`       | `hviske` | audio.cpp model id for transcription.           |
-| `asr_language`    | `da`     | Language hint; string or list of strings.       |
-| `enable_zeroconf` | `false`  | Register mDNS `_wyoming._tcp.local.` discovery. |
+The ASR bridge binds the Wyoming ASR protocol on TCP (default
+`tcp://0.0.0.0:11301`). It buffers the utterance as 16-bit / 16 kHz mono PCM,
+calls `POST /v1/audio/transcriptions` on `AudioStop`, emits a single
+`Transcript` event, then disconnects — one response per request. Upstream
+failures are relayed to the Wyoming client as an `Error` event.
 
 ## TTS Bridge
 
-The TTS bridge speaks the Wyoming TTS protocol over TCP (default
-`tcp://0.0.0.0:11201`, config field `tts_uri`). It calls `POST /v1/audio/speech`
-with a streaming response, relays each audio batch as a `SynthesizeChunk`, and
-guarantees `SynthesizeStop` even on upstream failure.
+The TTS bridge binds the Wyoming TTS protocol on TCP (default
+`tcp://0.0.0.0:11201`). It opens the output WAV, sends `SynthesizeStart`, then
+streams audio.cpp's batched response, relaying each batch as a
+`SynthesizeChunk`. `SynthesizeStop` is always sent, even when audio.cpp fails
+mid-stream.
 
-Config fields (TTS-specific):
+## Configuration
 
-| Field            | Default       | Meaning                                                        |
-| ---------------- | ------------- | -------------------------------------------------------------- |
-| `tts_voices`     | `[omnivoice]` | List of voice objects (model, name, language, speed, options). |
-| `tts_web_server` | `false`       | Enable the demo Flask web server.                              |
+Both bridges resolve settings in layers, last one wins:
+
+1. dataclass defaults
+2. `config.json` (`--config` path, default `./config.json`)
+3. `WYO_<FIELD>` environment variables
+4. command-line flags
+
+`config.example.json` is a complete working example.
+
+Shared fields:
+
+| Field             | Default                 | Meaning                                         |
+| ----------------- | ----------------------- | ----------------------------------------------- |
+| `audiocpp_uri`    | `http://localhost:8080` | Base URI of the audio.cpp HTTP server.          |
+| `enable_zeroconf` | `false`                 | Register mDNS `_wyoming._tcp.local.` discovery. |
+| `log_level`       | `INFO`                  | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. |
+
+ASR-specific:
+
+| Field                  | Default                 | Meaning                                              |
+| ---------------------- | ----------------------- | ---------------------------------------------------- |
+| `asr_uri`              | `tcp://0.0.0.0:11301`   | Wyoming TCP bind URI.                                |
+| `asr_model`            | `hviske`                | audio.cpp model id for transcription.                |
+| `asr_language`         | `da`                    | Language hint; string or list of language codes.     |
+| `asr_web_server`       | `false`                 | Also run the demo browser web server (`web` extra). |
+| `asr_web_server_host`  | `127.0.0.1`             | Demo web server interface.                           |
+| `asr_web_server_port`  | `5000`                  | Demo web server port.                                |
+| `asr_web_server_allow` | `null`                  | IP/CIDR allow-list for the demo web server.          |
+
+TTS-specific:
+
+| Field                  | Default                 | Meaning                                              |
+| ---------------------- | ----------------------- | ---------------------------------------------------- |
+| `tts_uri`              | `tcp://0.0.0.0:11201`   | Wyoming TCP bind URI.                                |
+| `tts_voices`           | `[omnivoice]`           | Voice objects: `model`, `name`, `language`, `speed`, `options`. |
+| `tts_web_server`       | `false`                 | Also run the demo browser web server (`web` extra). |
+| `tts_web_server_host`  | `127.0.0.1`             | Demo web server interface.                           |
+| `tts_web_server_port`  | `5001`                  | Demo web server port.                                |
+| `tts_web_server_allow` | `null`                  | IP/CIDR allow-list for the demo web server.          |
+
+Voices are the only field that cannot be set from the environment or the
+command line; they must come from `config.json`.
+
+```bash
+# Run the bridges against a local audio.cpp. Model and language come from
+# config.json or WYO_ASR_MODEL / WYO_ASR_LANGUAGE; --asr-uri and --audiocpp-uri
+# are the only CLI overrides.
+.venv/bin/python -m wyoming_audiocpp_asr \
+    --asr-uri tcp://0.0.0.0:11301 \
+    --audiocpp-uri http://localhost:8080
+
+.venv/bin/python -m wyoming_audiocpp_tts \
+    --tts-uri tcp://0.0.0.0:11201 \
+    --audiocpp-uri http://localhost:8080
+```
 
 ## Docker images
 
@@ -51,7 +105,6 @@ Two images are published to GitHub Container Registry:
 
 Both images share the same base and accept a single `config.json`. Each image
 bakes in a default config at `/config/config.json`; mount your own to override:
-
 ```bash
 docker run \
   -v /path/to/config.json:/config/config.json \
@@ -69,39 +122,18 @@ docker run \
 
 ### Docker Compose example
 
-A full stack with both bridges and the audio.cpp backend:
+A full stack — audio.cpp backend plus both bridges, with the model packages
+mounted at `/app/models` — is in [example/](example/):
 
-```yaml
-services:
-  audiocpp:
-    image: ghcr.io/0xshug0/audio.cpp:full-cuda12
-    ports:
-      - "8080:8080"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-
-  asr:
-    image: ghcr.io/m-abs/wyoming_audiocpp/asr
-    ports:
-      - "11301:11301"
-    volumes:
-      - ./config.json:/config/config.json
-    depends_on:
-      - audiocpp
-
-  tts:
-    image: ghcr.io/m-abs/wyoming_audiocpp/tts
-    ports:
-      - "11201:11201"
-    volumes:
-      - ./config.json:/config/config.json
-    depends_on:
-      - audiocpp
+```bash
+cd example
+hf download audio-cpp/audio.cpp-gguf OmniVoice-GGUF Hviske-v5.3-GGUF --local-dir ./models
+docker compose up -d
 ```
+
+`example/docker-compose.yml`, `example/server.json` (audio.cpp model config) and
+`example/config.json` (shared bridge config) are documented in
+[example/README.md](example/README.md).
 
 ## Development
 
@@ -112,6 +144,7 @@ The devcontainer provides Python 3.14, Node, and the audio.cpp GPU service:
 ```bash
 # Editable install (single distribution, both bridges):
 pip install -e ".[dev]"
+```
 
 ### Testing
 
