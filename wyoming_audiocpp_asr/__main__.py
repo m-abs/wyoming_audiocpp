@@ -76,6 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable debug logging",
     )
     parser.add_argument(
+        "--log-level",
+        type=str.upper,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default=None,
+        help="Logging level (default: INFO; supersedes --debug)",
+    )
+    parser.add_argument(
         "--log-format",
         default=BASIC_FORMAT,
         help="Logging format (default: basic format)",
@@ -92,8 +99,13 @@ def main(argv=None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    level = (
+        getattr(logging, args.log_level)
+        if args.log_level
+        else logging.DEBUG if args.debug else logging.INFO
+    )
     logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
+        level=level,
         format=args.log_format,
     )
 
@@ -107,6 +119,8 @@ def main(argv=None) -> None:
         asr_web_server_port=args.asr_web_server_port,
         asr_web_server_allow=args.asr_web_server_allow or None,
     )
+    if config.log_level and not args.log_level:
+        logging.getLogger().setLevel(getattr(logging, config.log_level))
     logging.getLogger("wyoming_audiocpp_asr").info("Wyoming %s | audio.cpp %s", config.asr_uri, config.audiocpp_uri)
     # Demo web server first: a missing 'web' install or an unavailable port
     # should fail now, before the Wyoming server starts.

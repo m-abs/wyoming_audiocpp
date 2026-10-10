@@ -4,15 +4,11 @@ Wyoming protocol bridges that connect Home Assistant voice assistants to
 [audio.cpp](https://github.com/0xShug0/audio.cpp).
 
 Two services share a single `config.json`: the [**ASR bridge**](#asr-bridge) transcribes
-speech into text, and the [**TTS bridge**](#tts-bridge) synthesizes text into speech. 
-Each service ignores the config fields it doesn't use.
+speech into text, and the [**TTS bridge**](#tts-bridge) synthesizes text into speech.
 
 ## Integration with audio.cpp
 
-audio.cpp is an OpenAI-compatible HTTP server that serves speech models. It is
-not a Wyoming service — it speaks HTTP, not the Wyoming TCP event protocol. The
-bridges convert between the two: they accept Wyoming events from Home Assistant
-clients over TCP and relay the payload to audio.cpp's HTTP endpoints.
+[audio.cpp](https://github.com/0xShug0/audio.cpp) is a high-performance C++ audio inference framework built on top of ggml, designed to make modern local audio models practical, portable, and fast.
 
 See [docs/integration.md](docs/integration.md) for the full protocol details,
 event flows, and wire format.
@@ -136,6 +132,4 @@ Images are published via GitHub Actions:
 - **`main`** — merging `rc` → `main` triggers a release build (e.g. `0.1.0`, tagged `latest`).
 
 The version is bumped manually in `pyproject.toml` as part of the release PR.
-No direct push to `main`; all changes go through a PR. See
-[docs/adr/0002-branching-strategy-dev-rc-main.md](docs/adr/0002-branching-strategy-dev-rc-main.md)
-for the full rationale.
+No direct push to `main`; all changes go through a PR.

@@ -1,36 +1,39 @@
 {
-  "audiocpp_uri": "http://localhost:8080",
+  "asr_language": [
+    "da",
+    "en"
+  ],
   "asr_model": "hviske",
-  "asr_language": ["da", "en"],
   "asr_uri": "tcp://0.0.0.0:11301",
-  "tts_uri": "tcp://0.0.0.0:11201",
-  "enable_zeroconf": false,
   "asr_web_server": false,
+  "asr_web_server_allow": null,
   "asr_web_server_host": "127.0.0.1",
   "asr_web_server_port": 5000,
-  "asr_web_server_allow": null,
-  "tts_web_server": false,
-  "tts_web_server_host": "127.0.0.1",
-  "tts_web_server_port": 5001,
-  "tts_web_server_allow": null,
+  "audiocpp_uri": "http://localhost:8080",
+  "enable_zeroconf": false,
+  "tts_uri": "tcp://0.0.0.0:11201",
   "tts_voices": [
     {
+      "language": "da",
       "model": "omnivoice",
       "name": "Female voice",
-      "language": "da",
-      "speed": 1.0,
       "options": {
         "instruct": "female"
-      }
+      },
+      "speed": 1
     },
     {
+      "language": "da",
       "model": "omnivoice",
       "name": "Male voice",
-      "language": "da",
-      "speed": 1.1,
       "options": {
         "instruct": "male"
-      }
+      },
+      "speed": 1.1
     }
-  ]
+  ],
+  "tts_web_server": false,
+  "tts_web_server_allow": null,
+  "tts_web_server_host": "127.0.0.1",
+  "tts_web_server_port": 5001
 }

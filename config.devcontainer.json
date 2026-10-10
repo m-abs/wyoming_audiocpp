@@ -6,6 +6,8 @@
   "asr_web_server_host": "0.0.0.0",
   "asr_web_server_port": 5000,
   "audiocpp_uri": "http://audio.cpp:8080",
+  "debug": true,
+  "log_level": "debug",
   "tts_uri": "tcp://0.0.0.0:11201",
   "tts_voices": [
     {
@@ -153,7 +155,7 @@
         "guidance_scale": 2,
         "instruct": "male, elderly, high pitch"
       },
-      "speed": 1.1
+      "speed": 0.9
     },
     {
       "language": "da",
@@ -163,7 +165,7 @@
         "guidance_scale": 2,
         "instruct": "male, elderly, moderate pitch"
       },
-      "speed": 1.1
+      "speed": 0.95
     }
   ],
   "tts_web_server": true,

@@ -53,7 +53,7 @@ def test_success_passes_args_and_shapes_response():
     assert captured["url"].endswith("/v1/audio/transcriptions")
     assert captured["data"] == {"model": MODEL, "language": LANGUAGE}
     assert "file" in captured["files"]
-    assert captured["timeout"] == 120.0
+    assert captured["timeout"] == 15.0
 
 
 def test_model_defaults_to_config():
