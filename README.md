@@ -131,5 +131,23 @@ Images are published via GitHub Actions:
 - **`rc`** — merging `dev` → `rc` triggers a release-candidate build (e.g. `0.1.0-rc1`).
 - **`main`** — merging `rc` → `main` triggers a release build (e.g. `0.1.0`, tagged `latest`).
 
-The version is bumped manually in `pyproject.toml` as part of the release PR.
-No direct push to `main`; all changes go through a PR.
+The version is bumped in `pyproject.toml` as part of the release PR using
+`scripts/bump_version.py`:
+
+```bash
+# Show the current version:
+.venv/bin/python scripts/bump_version.py --show
+
+# Set the target release version (e.g. 0.3.0):
+.venv/bin/python scripts/bump_version.py --set 0.3.0
+
+# Bump the base version (patch / minor / major):
+.venv/bin/python scripts/bump_version.py --bump minor
+```
+
+RC versions (`0.3.0-rc1`) are computed by the workflow on push to `rc`. The
+workflow skips publishing a new RC once the base version is already published
+on ghcr.io — e.g. if `0.2.0` is published, `rc` pushes do not publish
+`0.2.0-rc2`. No direct push to `main`; all changes go through a PR. See
+[docs/adr/0002-branching-strategy-dev-rc-main.md](docs/adr/0002-branching-strategy-dev-rc-main.md)
+for the full rationale.

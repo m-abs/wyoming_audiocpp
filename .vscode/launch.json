@@ -32,7 +32,10 @@
             "module": "wyoming_audiocpp_tts",
             "args": [
                 "--config",
-                "config.devcontainer.json"
+                "config.devcontainer.json",
+                "--debug",
+                "--log-level",
+                "DEBUG"
             ],
             "cwd": "/workspaces",
             "console": "integratedTerminal",

@@ -152,7 +152,7 @@
         "guidance_scale": 2,
         "instruct": "male, elderly, high pitch"
       },
-      "speed": 1.1
+      "speed": 0.9
     },
     {
       "language": "da",
@@ -162,7 +162,7 @@
         "guidance_scale": 2,
         "instruct": "male, elderly, moderate pitch"
       },
-      "speed": 1.1
+      "speed": 0.95
     }
   ],
   "tts_web_server": false,
