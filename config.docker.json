@@ -1,6 +1,6 @@
 {
   "asr_language": "da",
-  "asr_model": "hviske",
+  "asr_model": "hviske-v6",
   "asr_uri": "tcp://0.0.0.0:11301",
   "asr_web_server": false,
   "asr_web_server_host": "127.0.0.1",

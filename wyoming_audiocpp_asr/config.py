@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 from wyoming_audiocpp_common.config import BridgeConfig
 
-DEFAULT_MODEL = "hviske"
+DEFAULT_MODEL = "hviske-v6"
 DEFAULT_LANGUAGE = "da"
 DEFAULT_URI = "tcp://0.0.0.0:11301"
 DEFAULT_WEB_SERVER_HOST = "127.0.0.1"

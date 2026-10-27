@@ -15,11 +15,17 @@
         "audio.cpp": true
     },
     "cSpell.words": [
+        "codegraph",
         "devcontainers",
         "GGUF",
         "joshuanianji",
         "michidk",
         "omnivoice",
         "stuartleeks"
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

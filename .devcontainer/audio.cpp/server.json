@@ -19,9 +19,9 @@
       }
     },
     {
-      "id": "hviske",
-      "family": "hviske_asr",
-      "path": "/app/models/Hviske-v5.3-GGUF",
+      "id": "hviske-v6",
+      "family": "hviske_asr_v6",
+      "path": "/app/models/Hviske-v6-GGUF/hviske-v6-q8_0.gguf",
       "task": "asr",
       "mode": "offline"
     }

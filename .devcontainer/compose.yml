@@ -10,14 +10,10 @@ services:
 
     environment:
       - TZ=Europe/Copenhagen
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - PYTHON_AUTO_VRUN=1
 
     depends_on:
       - audio.cpp
-      
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
     networks:
       - host
@@ -29,7 +25,7 @@ services:
     working_dir: /workspaces
 
   audio.cpp:
-    image: ghcr.io/0xshug0/audio.cpp:full-cuda12
+    image: ghcr.io/0xshug0/audio.cpp:full-cuda13
     ports:
       - "0.0.0.0:8080:8080"
     volumes:
@@ -58,4 +54,5 @@ volumes:
 networks:
   host:
     driver: bridge
+
   audiocpp:

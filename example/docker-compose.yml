@@ -6,7 +6,7 @@
 # audio.cpp container, which is the path server.json refers to.
 services:
   audiocpp:
-    image: ghcr.io/0xshug0/audio.cpp:full-cuda12
+    image: ghcr.io/0xshug0/audio.cpp:full-cuda13
     restart: unless-stopped
     ports:
       - "8080:8080"

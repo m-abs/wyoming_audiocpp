@@ -178,9 +178,10 @@ The version is bumped in `pyproject.toml` as part of the release PR using
 .venv/bin/python scripts/bump_version.py --bump minor
 ```
 
-RC versions (`0.3.0-rc1`) are computed by the workflow on push to `rc`. The
-workflow skips publishing a new RC once the base version is already published
-on ghcr.io — e.g. if `0.2.0` is published, `rc` pushes do not publish
-`0.2.0-rc2`. No direct push to `main`; all changes go through a PR. See
+RC versions (`0.3.0-rc1`) are computed by the workflow on push to `rc` from the
+existing git tags (`git tag -l "0.3.0-rc*"`), and every successful publish
+creates the matching tag. The workflow skips publishing a new RC once the base
+version is already released — e.g. if the tag `0.2.0` exists, `rc` pushes do not
+publish `0.2.0-rc2`. No direct push to `main`; all changes go through a PR. See
 [docs/adr/0002-branching-strategy-dev-rc-main.md](docs/adr/0002-branching-strategy-dev-rc-main.md)
 for the full rationale.

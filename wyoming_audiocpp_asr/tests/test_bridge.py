@@ -9,7 +9,7 @@ from wyoming_audiocpp_asr.config import AsrConfig
 
 from . import synth_wav
 
-MODEL = "hviske"
+MODEL = "hviske-v6"
 LANGUAGE = "da"
 
 

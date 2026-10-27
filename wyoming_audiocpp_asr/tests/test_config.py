@@ -28,10 +28,10 @@ def test_transcription_endpoint_strips_trailing_slash():
 
 def test_from_dict_overrides():
     config = AsrConfig.from_dict(
-        {"audiocpp_uri": "http://10.0.0.1:8080", "asr_model": "hviske", "asr_language": "en"}
+        {"audiocpp_uri": "http://10.0.0.1:8080", "asr_model": "hviske-v6", "asr_language": "en"}
     )
     assert config.audiocpp_uri == "http://10.0.0.1:8080"
-    assert config.asr_model == "hviske"
+    assert config.asr_model == "hviske-v6"
     assert config.asr_language == "en"
 
 
@@ -40,12 +40,12 @@ def test_from_args_loads_config_file():
     import json
 
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
-        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske"}, tmp)
+        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske-v6"}, tmp)
         path = tmp.name
 
     config = AsrConfig.from_args(path)
     assert config.audiocpp_uri == "http://example:8080"
-    assert config.asr_model == "hviske"
+    assert config.asr_model == "hviske-v6"
 
 
 def test_from_args_cli_overrides_config_file():
@@ -53,7 +53,7 @@ def test_from_args_cli_overrides_config_file():
     import json
 
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
-        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske"}, tmp)
+        json.dump({"audiocpp_uri": "http://example:8080", "asr_model": "hviske-v6"}, tmp)
         path = tmp.name
 
     config = AsrConfig.from_args(path, asr_model="qwen3_asr", asr_language="da")
@@ -63,9 +63,9 @@ def test_from_args_cli_overrides_config_file():
 
 
 def test_from_args_missing_config_uses_defaults():
-    config = AsrConfig.from_args("/nonexistent/config.json", asr_model="hviske")
+    config = AsrConfig.from_args("/nonexistent/config.json", asr_model="hviske-v6")
     assert config.audiocpp_uri == DEFAULT_AUDIOCPP_URI
-    assert config.asr_model == "hviske"
+    assert config.asr_model == "hviske-v6"
 
 
 def test_from_args_config_file_boolean_respected():
@@ -77,7 +77,7 @@ def test_from_args_config_file_boolean_respected():
         json.dump(
             {
                 "audiocpp_uri": "http://example:8080",
-                "asr_model": "hviske",
+                "asr_model": "hviske-v6",
                 "asr_web_server": True,
                 "enable_zeroconf": True,
             },
@@ -100,7 +100,7 @@ def test_from_args_cli_true_overrides_config_file_false():
         json.dump(
             {
                 "audiocpp_uri": "http://example:8080",
-                "asr_model": "hviske",
+                "asr_model": "hviske-v6",
                 "asr_web_server": False,
                 "enable_zeroconf": False,
             },
@@ -122,7 +122,7 @@ def test_from_args_none_override_keeps_config_file_value():
         json.dump(
             {
                 "audiocpp_uri": "http://example:8080",
-                "asr_model": "hviske",
+                "asr_model": "hviske-v6",
                 "asr_web_server": True,
             },
             tmp,
@@ -134,7 +134,7 @@ def test_from_args_none_override_keeps_config_file_value():
     assert config.asr_web_server is True
 
 def test_validate_rejects_bad_scheme():
-    config = AsrConfig(audiocpp_uri="localhost:8080", asr_model="hviske")
+    config = AsrConfig(audiocpp_uri="localhost:8080", asr_model="hviske-v6")
     with pytest.raises(ValueError):
         config.validate()
 
@@ -164,29 +164,29 @@ def test_parse_tcp_uri():
 
 
 def test_validate_rejects_non_tcp_uri():
-    config = AsrConfig(asr_uri="stdio://", asr_model="hviske")
+    config = AsrConfig(asr_uri="stdio://", asr_model="hviske-v6")
     with pytest.raises(ValueError):
         config.validate()
 
 def test_validate_accepts_language_list():
-    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=["da", "en"])
+    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske-v6", asr_language=["da", "en"])
     config.validate()
 
 
 def test_validate_rejects_non_string_language_list_item():
-    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=["da", 42])
+    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske-v6", asr_language=["da", 42])
     with pytest.raises(ValueError):
         config.validate()
 
 
 def test_validate_rejects_non_string_language():
-    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske", asr_language=42)
+    config = AsrConfig(audiocpp_uri="http://localhost:8080", asr_model="hviske-v6", asr_language=42)
     with pytest.raises(ValueError):
         config.validate()
 
 
 def test_validate_rejects_bad_web_server_port():
-    config = AsrConfig(asr_model="hviske", asr_web_server=True, asr_web_server_port=0)
+    config = AsrConfig(asr_model="hviske-v6", asr_web_server=True, asr_web_server_port=0)
     with pytest.raises(ValueError):
         config.validate()
 

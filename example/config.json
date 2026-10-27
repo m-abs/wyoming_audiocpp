@@ -4,7 +4,7 @@
   "log_level": "INFO",
 
   "asr_uri": "tcp://0.0.0.0:11301",
-  "asr_model": "hviske",
+  "asr_model": "hviske-v6",
   "asr_language": ["da", "en"],
   "asr_web_server": false,
 

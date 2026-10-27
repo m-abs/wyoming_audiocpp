@@ -17,7 +17,7 @@ The compose file mounts `./models` at `/app/models` inside the audio.cpp
 container, so `server.json` can reference the model packages by that path.
 
 ```bash
-hf download audio-cpp/audio.cpp-gguf OmniVoice-GGUF Hviske-v5.3-GGUF --local-dir ./models
+hf download audio-cpp/audio.cpp-gguf OmniVoice-GGUF/omnivoice-q8_0.gguf Hviske-v6-GGUF/hviske-v6-q8_0.gguf --local-dir ./models
 ```
 
 (`hf` is the Hugging Face CLI: `pip install huggingface_hub`. The files are
@@ -27,8 +27,8 @@ hf download audio-cpp/audio.cpp-gguf OmniVoice-GGUF Hviske-v5.3-GGUF --local-dir
 models/
 ├── OmniVoice-GGUF/
 │   └── omnivoice-q8_0.gguf
-└── Hviske-v5.3-GGUF/
-    └── hviske-v5.3-q8_0.gguf
+└── Hviske-v6-GGUF/
+    └── hviske-v6-q8_0.gguf
 ```
 
 ## 2. Point `server.json` at them
@@ -55,9 +55,9 @@ models/
       "default_request_options": { "instruct": "female, low pitch", "speed": 1.0 }
     },
     {
-      "id": "hviske",
+      "id": "hviske-v6",
       "family": "hviske_asr",
-      "path": "/app/models/Hviske-v5.3-GGUF",
+      "path": "/app/models/Hviske-v6-GGUF/hviske-v6-q8_0.gguf",
       "task": "asr",
       "mode": "offline"
     }

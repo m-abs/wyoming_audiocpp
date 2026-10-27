@@ -9,7 +9,7 @@ from wyoming_audiocpp_asr import audiocpp_client
 from wyoming_audiocpp_asr.config import AsrConfig
 from wyoming_audiocpp_asr.web_server import make_asr_web_server
 
-MODEL = "hviske"
+MODEL = "hviske-v6"
 
 from . import synth_wav  # noqa: E402
 

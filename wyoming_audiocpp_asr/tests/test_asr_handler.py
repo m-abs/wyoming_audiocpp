@@ -15,7 +15,7 @@ from wyoming_audiocpp_asr import audiocpp_client
 from wyoming_audiocpp_asr.asr_handler import AudioCppAsrEventHandler, build_asr_info
 from wyoming_audiocpp_asr.config import AsrConfig
 
-MODEL = "hviske"
+MODEL = "hviske-v6"
 
 _CHUNK = AudioChunk(rate=16000, width=2, channels=1, audio=b"\x00" * 160).event()
 _START = AudioStart(rate=16000, width=2, channels=1).event()

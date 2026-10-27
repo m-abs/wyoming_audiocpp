@@ -71,6 +71,9 @@
 		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly",
 		
 		// Mount host Docker socket for container access
-		"type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+		"type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
+
+		// Mount GitHub CLI configuration to share authentication
+		"type=bind,source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh"		
 	]
 }
